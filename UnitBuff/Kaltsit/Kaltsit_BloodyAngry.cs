@@ -12,7 +12,7 @@ namespace BossAmiya
         {
             return 2.25f;
         }
-        public override float GetDamageFactor(UnitModel target, DamageInfo info)
+        public override float GetDamageFactor()
         {
             return 2.25f;
         }

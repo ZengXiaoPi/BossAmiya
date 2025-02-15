@@ -26,6 +26,8 @@ namespace BossAmiya
             logger.Info("—————————————————NEW GAME———————————————————");
             try
             {
+                // 初始化凋亡UI
+                ElementUI.Instance.InitAB();
                 // 真实伤害 for amiya
                 harmony.Patch(typeof(CreatureInfoStatRoot).GetMethod("WorkDamageListInit", AccessTools.all, null, new Type[0], null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("CreatureInfoStatRoot_WorkDamageListInit")), null); errorNum++;
                 harmony.Patch(typeof(WorkAllocateRegion).GetMethod("OnObserved", AccessTools.all, null, new Type[] { typeof(CreatureModel) }, null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("WorkAllocateRegion_OnObserved")), null); errorNum++;
@@ -37,6 +39,12 @@ namespace BossAmiya
 
                 // 镇压区域贴图修正
                 harmony.Patch(typeof(CreatureSuppressRegion).GetMethod("SetData", AccessTools.all, null, new Type[] { typeof(UnitModel) }, null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("CreatureSuppressRegion_SetData")), null); errorNum++;
+
+                // 在结束一天后不得不做的
+                harmony.Patch(typeof(GameManager).GetMethod("EndGame", AccessTools.all, null, new Type[0], null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("GameManager_EndGame")), null); errorNum++;
+
+                // 控制台
+                harmony.Patch(typeof(ConsoleScript).GetMethod("GetHmmCommand", AccessTools.all, null, new Type[] { typeof(string) }, null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("ConsoleScript_GetHmmCommand")), null, null); errorNum++;
             }
             catch (Exception ex)
             {
@@ -110,6 +118,61 @@ namespace BossAmiya
             {
                 __instance.Portrait.sprite = Sprites.LCPSprite;
             }
+        }
+
+        public static void GameManager_EndGame()
+        {
+            ElementManager.Instance.ClearDictionary();
+        }
+
+        public static bool ConsoleScript_GetHmmCommand(string cmd, ref string __result)
+        {
+            try
+            {
+                string[] array = cmd.Split(new char[]
+                {
+                    ' '
+                });
+                string type1 = array[0].ToLower();
+                string type2 = array[1].ToLower().Trim();
+                string type3 = array[2].ToLower().Trim();
+                int value = 0;
+                if (array.Length >= 4)
+                {
+                    value = Convert.ToInt32(array[3].ToLower().Trim());
+                }
+                int value2 = 0;
+                if (array.Length >= 5)
+                {
+                    value2 = Convert.ToInt32(array[4].ToLower().Trim());
+                }
+
+                if (type1 == "zxp")
+                {
+                    if (type2 == "element")
+                    {
+                        if (type3 == "damage")
+                        {
+                            var agent = AgentManager.instance.GetAgent(value);
+                            if (agent != null)
+                            {
+                                ElementManager.Instance.GiveElementDamage(agent, value2);
+                                __result = "";
+                                return false;
+                            }
+                            else
+                            {
+                                logger.Error("Agent not found.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+            }
+            return true;
         }
     }
 }
