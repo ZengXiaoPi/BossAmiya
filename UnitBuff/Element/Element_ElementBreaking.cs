@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using static UnityEngine.UI.CanvasScaler;
 
 namespace BossAmiya
 {
@@ -11,21 +12,24 @@ namespace BossAmiya
         }
         public override void Init(UnitModel model)
         {
+            this.remainTime = 30f;
+            this.model = model;
             phase = 1;
         }
         public override void FixedUpdate()
         {
-            _time -= Time.deltaTime;
+            base.FixedUpdate();
             _tempTime += Time.deltaTime;
-            __controller.SetProgress(_time / 30f * 100f);
-            if (_time <= 15f && phase == 1)
+            __controller.SetProgress(remainTime / 30f * 100f);
+            if (remainTime <= 15f && phase == 1)
             {
                 _subDamage = 0.5f;
                 phase = 2;
             }
-            if (_time <= 0f)
+            if (remainTime <= 0f)
             {
                 ElementUI.Instance.RemoveElementUIFromAgent(__owner);
+                ElementManager.Instance.ElementUnitIsBreaking.Remove(__owner);
                 Destroy();
             }
             if (_tempTime >= 1f && phase == 1)
@@ -35,7 +39,7 @@ namespace BossAmiya
             }
             if (phase == 2)
             {
-                _subDamage = 1 - _time / 15f * 0.5f;
+                _subDamage = 1 - remainTime / 15f * 0.5f;
             }
         }
         public override float GetDamageFactor()
@@ -46,7 +50,6 @@ namespace BossAmiya
         private DarkElementController __controller;
         private int phase = 0;
         private float _tempTime = 0f;
-        private float _time = 30f;
         private float _subDamage = 1f;
     }
 }

@@ -8,6 +8,11 @@ namespace BossAmiya
     /// </summary>
     public class LCP_SpecialBuff1 : UnitBuf
     {
+        public override void Init(UnitModel model)
+        {
+            this.remainTime = float.MaxValue;
+            base.Init(model);
+        }
         public override float MovementScale()
         {
             return 0.8f;
@@ -17,7 +22,7 @@ namespace BossAmiya
             return 1.2f;
         }
 
-        public override float GetDamageFactor()
+        public override float OnGiveDamageMult(UnitModel target, DamageInfo dmg)
         {
             return 1.3f;
         }

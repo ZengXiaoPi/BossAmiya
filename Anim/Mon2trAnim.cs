@@ -46,14 +46,23 @@ namespace BossAmiya
                 List<UnitModel> luckyUnits = new List<UnitModel>();
                 foreach (UnitModel unit in allUnits)
                 {
-                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 4f))
+                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 5f))
                     {
                         luckyUnits.Add(unit);
                     }
                 }
                 foreach (UnitModel unit in luckyUnits)
                 {
-                    unit.TakeDamage(script.model, new DamageInfo(RwbpType.R, 200));
+                    if (!RougeManager.Instance.isHasRelic())
+                    {
+                        unit.TakeDamage(script.model, new DamageInfo(RwbpType.R, 200));
+                    }
+                    else
+                    {
+                        Harmony_Patch.RealDamage_TempList.Add(unit);
+                        unit.TakeDamage(script.model, new DamageInfo(RwbpType.N, 200));
+                    }
+                    DamageParticleEffect.Invoker(unit, RwbpType.R, this.script.model);
                 }
             };
         }

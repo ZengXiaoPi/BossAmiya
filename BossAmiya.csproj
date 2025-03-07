@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,11 +39,13 @@
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\Managed\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="LobotomyBaseModLib">
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\Managed\LobotomyBaseModLib.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="NewGameMode">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\BaseMods\ykmt_LobotomyRougeLike\NewGameMode.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -55,6 +58,9 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <Private>False</Private>
@@ -78,23 +84,34 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BossAmiya.cs" />
-    <Compile Include="BossAmiyaAnim.cs" />
-    <Compile Include="BossAmiyaChild.cs" />
+    <Compile Include="Anim\KLAnim.cs" />
+    <Compile Include="Anim\LamalianAnim.cs" />
+    <Compile Include="Anim\TSLZAnim.cs" />
+    <Compile Include="Enemy\BossAmiya.cs" />
+    <Compile Include="Anim\BossAmiyaAnim.cs" />
+    <Compile Include="Enemy\BossAmiyaChild.cs" />
     <Compile Include="ElementDamage\ElementManager.cs" />
     <Compile Include="ElementDamage\ElementUI.cs" />
-    <Compile Include="Goria.cs" />
+    <Compile Include="Enemy\Goria.cs" />
+    <Compile Include="Anim\GoriaAnim.cs" />
+    <Compile Include="Enemy\KL.cs" />
+    <Compile Include="Enemy\Lamalian.cs" />
+    <Compile Include="Enemy\TSLZ.cs" />
     <Compile Include="Harmony_Patch.cs" />
     <Compile Include="Extension.cs" />
-    <Compile Include="Kaltsit.cs" />
-    <Compile Include="KaltsitAnim.cs" />
-    <Compile Include="LCP.cs" />
-    <Compile Include="LCPAnim.cs" />
-    <Compile Include="Mon2tr.cs" />
-    <Compile Include="Mon2trAnim.cs" />
+    <Compile Include="Enemy\Kaltsit.cs" />
+    <Compile Include="Anim\KaltsitAnim.cs" />
+    <Compile Include="Enemy\LCP.cs" />
+    <Compile Include="Anim\LCPAnim.cs" />
+    <Compile Include="Enemy\Mon2tr.cs" />
+    <Compile Include="Anim\Mon2trAnim.cs" />
+    <Compile Include="HPHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rouge\MeMe\BossAmiya_Relic.cs" />
+    <Compile Include="Rouge\RougeManager.cs" />
     <Compile Include="Sprites.cs" />
     <Compile Include="UnitBuff\Element\Element_ElementBreaking.cs" />
+    <Compile Include="UnitBuff\Goria\Goria_CantMove.cs" />
     <Compile Include="UnitBuff\Kaltsit\Kaltsit_BloodyAngry.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff1.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff2.cs" />
@@ -104,6 +121,9 @@
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff4.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff7.cs" />
     <Compile Include="YKMTLog.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Enemy\CommandAmiya\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CopyFile" AfterTargets="build">

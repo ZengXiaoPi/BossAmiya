@@ -1,8 +1,7 @@
-﻿using Spine;
+﻿using NewGameMode;
+using Spine;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 namespace BossAmiya
@@ -22,14 +21,14 @@ namespace BossAmiya
             {
                 return;
             }
-            if (notice == global::NoticeName.OnAgentDead)
+            if (notice == NoticeName.OnAgentDead)
             {
-                global::AgentModel agentModel = param[0] as global::AgentModel;
+                AgentModel agentModel = param[0] as AgentModel;
                 if (agentModel == null)
                 {
                     return;
                 }
-                if (agentModel.DeadType == global::DeadType.EXECUTION)
+                if (agentModel.DeadType == DeadType.EXECUTION)
                 {
                     return;
                 }
@@ -45,14 +44,14 @@ namespace BossAmiya
                     this.model.SubQliphothCounter();
                 }
             }
-            else if (notice == global::NoticeName.OnOfficerDie)
+            else if (notice == NoticeName.OnOfficerDie)
             {
-                global::OfficerModel officerModel = param[0] as global::OfficerModel;
+                OfficerModel officerModel = param[0] as OfficerModel;
                 if (officerModel == null)
                 {
                     return;
                 }
-                if (officerModel.DeadType == global::DeadType.EXECUTION)
+                if (officerModel.DeadType == DeadType.EXECUTION)
                 {
                     return;
                 }
@@ -102,15 +101,26 @@ namespace BossAmiya
                 {
                     summonKaltsitTimer = 10f;
                     summonLCPTimer = 300f;
+                    summonGoriaTimer = 600f;
+                    summonKLTimer = 900f;
+                    summonLamalianTimer = 1200f;
+                    TheSignOfContinuation = 1500f;
                     SummonedCreature.Clear();
                     isSummoning = false;
-                    if (UnityEngine.Random.Range(0, 2) == 0)
+                    isWillShocking = false;
+                    isSignOfContinuation = false;
+                    WillShock = 30f;
+                    WillShockDamage = 6;
+                    if (!RougeManager.Instance.isHasRelic())
                     {
-                        AngelaConversationUI.instance.AddAngelaMessage(LocalizeTextDataModel.instance.GetText("Angela_Message_1").Replace("$1", GetName()));
+                        isEmergency = false;
+                        RandomEventLayer.currentLayer.AddTypo(RandomEventLayer.currentLayer.MakeDefaultTypoSession("ISW-DF", LocalizeTextDataModel.instance.GetText("AmiyaEscape_Title"), LocalizeTextDataModel.instance.GetText("AmiyaEscape_Desc"), Sprites.Amiya_Color, ""));
                     }
                     else
                     {
-                        AngelaConversationUI.instance.AddAngelaMessage(LocalizeTextDataModel.instance.GetText("Angela_Message_2").Replace("$1", GetName()));
+                        isEmergency = true;
+                        RandomEventLayer.currentLayer.AddTypo(RandomEventLayer.currentLayer.MakeDefaultTypoSession("ISW-DF-Emergency", LocalizeTextDataModel.instance.GetText("AmiyaEscape_Title_Relic"), LocalizeTextDataModel.instance.GetText("AmiyaEscape_Desc_Relic"), Sprites.Escape_Relic_Color, ""));
+                        EnterEmergencyState();
                     }
                     SefiraConversationController.Instance.UpdateConversation(Sprites.AmiyaSprite, Sprites.Amiya_Color, LocalizeTextDataModel.instance.GetText("BossAmiya_Desc"));
                     BgmManager.instance.FadeOut();
@@ -123,6 +133,16 @@ namespace BossAmiya
                     Harmony_Patch.logger.Error(ex);
                 }
             }
+        }
+        private void EnterEmergencyState()
+        {
+            summonKaltsitTimer = 10f;
+            summonLCPTimer = 150f;
+            summonGoriaTimer = 300f;
+            summonKLTimer = 600f;
+            summonLamalianTimer = 900f;
+            TheSignOfContinuation = 1200f;
+            WillShockDamage = 12;
         }
         public override void OnStageStart()
         {
@@ -168,17 +188,131 @@ namespace BossAmiya
             {
                 if (amiyaPhase == 1)
                 {
-                    CheckKaltsitSummon();
-                    CheckLCPSummon();
-                    if (!(model.GetCurrentCommand() is MoveCreatureCommand) && !isSummoning)
+                    CheckTheSignOfContinuation();
+                    if (isSignOfContinuation) return;
+                    if (!isWillShocking)
                     {
-                        MakeMovement();
+                        CheckKaltsitSummon();
+                        CheckLCPSummon();
+                        CheckGoriaSummon();
+                        CheckKLSummon();
+                        CheckLamalianSummon();
+                    }
+                    if (!isSummoning)
+                    {
+                        CheckWillShock();
+                    }
+                    if (!(this.model.GetCurrentCommand() is MoveCreatureCommand) && !isSummoning && !isWillShocking)
+                    {
+                        this.MakeMovement();
+                    }
+                }
+                else if (amiyaPhase == 2)
+                {
+                    if (!(this.model.GetCurrentCommand() is MoveCreatureCommand) && !isSummoning && !isWillShocking)
+                    {
+                        this.MakeMovement();
                     }
                 }
             }
             catch (Exception ex)
             {
                 Harmony_Patch.logger.Error(ex);
+            }
+        }
+        public List<UnitModel> GetNearEnemy()
+        {
+            List<UnitModel> list = [];
+            PassageObjectModel passage = this.model.GetMovableNode().GetPassage();
+            if (passage != null)
+            {
+                foreach (MovableObjectNode movableObjectNode in passage.GetEnteredTargets())
+                {
+                    bool flag2 = this.IsHostile(movableObjectNode);
+                    if (flag2)
+                    {
+                        UnitModel unit = movableObjectNode.GetUnit();
+                        list.Add(unit);
+                    }
+                }
+            }
+            return list;
+        }
+        public bool IsHostile(MovableObjectNode mov)
+        {
+            UnitModel unit = mov.GetUnit();
+            bool result;
+            if (unit is CreatureModel)
+            {
+                CreatureModel creatureModel = unit as CreatureModel;
+                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && !(creatureModel.script is BossAmiya) && !(creatureModel.script is Kaltsit) && !(creatureModel.script is LCP) && !(creatureModel.script is Mon2tr);
+            }
+            else
+            {
+                result = unit.hp > 0f && unit.IsAttackTargetable();
+            }
+            return result;
+        }
+        private void CheckWillShock()
+        {
+            if (WillShock <= 0f && !isWillShocking)
+            {
+                isWillShocking = true;
+                if (!RougeManager.Instance.isHasRelic())
+                {
+                    WillShock = 120f;
+                }
+                else
+                {
+                    WillShock = 80f;
+                }
+                this.animscript.WillShock();
+            }
+            else
+            {
+                WillShock -= Time.deltaTime;
+            }
+        }
+        private void CheckTheSignOfContinuation()
+        {
+            if (TheSignOfContinuation <= 0f && !isSignOfContinuation)
+            {
+                this.model.commandQueue.Clear();
+                this.movable.StopMoving();
+                int deadCount = 0;
+                var luckCreatureList = new List<ChildCreatureModel>();
+                foreach (ChildCreatureModel unit in childs)
+                {
+                    if (unit.hp > 0f)
+                    {
+                        luckCreatureList.Add(unit);
+                        deadCount++;
+                    }
+                }
+                if (deadCount > 0)
+                {
+                    var agentList = AgentManager.instance.GetAgentList();
+                    var AliveAgentList = new List<AgentModel>();
+                    foreach (AgentModel agent in agentList)
+                    {
+                        if (!agent.IsDead())
+                        {
+                            AliveAgentList.Add(agent);
+                        }
+                    }
+                    var luckyAgentList = Extension.GetRandomElements<AgentModel>(AliveAgentList, deadCount * 2);
+                    isSignOfContinuation = true;
+                    animscript.IntoPhase2(luckCreatureList, luckyAgentList);
+                }
+                else
+                {
+                    isSignOfContinuation = true;
+                    animscript.IntoPhase2();
+                }
+            }
+            else
+            {
+                TheSignOfContinuation -= Time.deltaTime;
             }
         }
         private void CheckKaltsitSummon()
@@ -188,7 +322,7 @@ namespace BossAmiya
                 Harmony_Patch.logger.Info("Summoning Kaltsit");
                 SummonChildCreatureByAmiya("Kaltsit", "Custom/KaltsitAnim");
             }
-            else
+            else if (summonLCPTimer >= 0f)
             {
                 summonKaltsitTimer -= Time.deltaTime;
             }
@@ -200,9 +334,45 @@ namespace BossAmiya
                 Harmony_Patch.logger.Info("Summoning LCP");
                 SummonChildCreatureByAmiya("LCP", "Custom/LCPAnim");
             }
-            else
+            else if (summonLCPTimer >= 0f)
             {
                 summonLCPTimer -= Time.deltaTime;
+            }
+        }
+        private void CheckGoriaSummon()
+        {
+            if (summonGoriaTimer <= 0f && this.model.IsEscaped() && !isSummoning & !SummonedCreature.Contains("Goria"))
+            {
+                Harmony_Patch.logger.Info("Summoning Goria");
+                SummonChildCreatureByAmiya("Goria", "Custom/GoriaAnim");
+            }
+            else if (summonGoriaTimer >= 0f)
+            {
+                summonGoriaTimer -= Time.deltaTime;
+            }
+        }
+        private void CheckKLSummon()
+        {
+            if (summonKLTimer <= 0f && this.model.IsEscaped() && !isSummoning & !SummonedCreature.Contains("KL"))
+            {
+                Harmony_Patch.logger.Info("Summoning KL");
+                SummonChildCreatureByAmiya("KL", "Custom/KLAnim");
+            }
+            else if (summonKLTimer >= 0f)
+            {
+                summonKLTimer -= Time.deltaTime;
+            }
+        }
+        private void CheckLamalianSummon()
+        {
+            if (summonLamalianTimer <= 0f && this.model.IsEscaped() && !isSummoning & !SummonedCreature.Contains("Lamalian"))
+            {
+                Harmony_Patch.logger.Info("Summoning LML");
+                SummonChildCreatureByAmiya("Lamalian", "Custom/LamalianAnim");
+            }
+            else if (summonLamalianTimer >= 0f)
+            {
+                summonLamalianTimer -= Time.deltaTime;
             }
         }
         private void SummonChildCreatureByAmiya(string script, string anim)
@@ -231,7 +401,7 @@ namespace BossAmiya
             if (amiyaPhase == 1) return false;
             return true;
         }
-        private void MakeMovement()
+        public void MakeMovement()
         {
             this.model.ClearCommand();
             this.model.MoveToNode(MapGraph.instance.GetCreatureRoamingPoint());
@@ -250,6 +420,16 @@ namespace BossAmiya
             }
             return true;
         }
+        public void CheckDeadCreature()
+        {
+            if (summonGoriaTimer <= 0 && summonKLTimer <= 0 && summonLamalianTimer <= 0 && summonKaltsitTimer <= 0 && summonLCPTimer <= 0)
+            {
+                if (childs.Count == 0)
+                {
+                    TheSignOfContinuation = 0f;
+                }
+            }
+        }
         public ChildCreatureModel MakeChildCreature(MovableObjectNode node, string ID, string Anim)
         {
             ChildCreatureModel childCreatureModel = null;
@@ -263,19 +443,43 @@ namespace BossAmiya
                 childCreatureModel.GetMovableNode().Assign(node);
                 if (ID == "Kaltsit")
                 {
-                    childCreatureModel.baseMaxHp = 1500;
-                    childCreatureModel.hp = 1500;
+                    childCreatureModel.baseMaxHp = 750;
+                    childCreatureModel.hp = 750;
                     childCreatureModel.SetSpeed(1.5f);
                     childCreatureModel.SetDefenseId("Kaltsit");
                     childCreatureModel.RiskLevel = RiskLevel.WAW;
                 }
                 else if (ID == "LCP")
                 {
-                    childCreatureModel.baseMaxHp = 2500;
-                    childCreatureModel.hp = 2500;
+                    childCreatureModel.baseMaxHp = 2000;
+                    childCreatureModel.hp = 2000;
                     childCreatureModel.SetSpeed(0.5f);
                     childCreatureModel.SetDefenseId("LCP");
                     childCreatureModel.RiskLevel = RiskLevel.ALEPH;
+                }
+                else if (ID == "Goria")
+                {
+                    childCreatureModel.baseMaxHp = 1200;
+                    childCreatureModel.hp = 1200;
+                    childCreatureModel.SetSpeed(0.7f);
+                    childCreatureModel.SetDefenseId("Goria");
+                    childCreatureModel.RiskLevel = RiskLevel.WAW;
+                }
+                else if (ID == "KL")
+                {
+                    childCreatureModel.baseMaxHp = 1500;
+                    childCreatureModel.hp = 1500;
+                    childCreatureModel.SetSpeed(1.6f);
+                    childCreatureModel.SetDefenseId("KL");
+                    childCreatureModel.RiskLevel = RiskLevel.ALEPH;
+                }
+                else if (ID == "Lamalian")
+                {
+                    childCreatureModel.baseMaxHp = 800;
+                    childCreatureModel.hp = 800;
+                    childCreatureModel.SetSpeed(1.6f);
+                    childCreatureModel.SetDefenseId("Lamalian");
+                    childCreatureModel.RiskLevel = RiskLevel.WAW;
                 }
                 this.childs.Add(childCreatureModel);
             }
@@ -319,14 +523,23 @@ namespace BossAmiya
         }
         public BossAmiyaAnim animscript;
         public static int amiyaPhase = 0;
-        public List<ChildCreatureModel> childs = new List<ChildCreatureModel>();
+        public List<ChildCreatureModel> childs = [];
         public static SoundEffectPlayer fullBGMplayer;
         public static SoundEffectPlayer loopBGMplayer;
-        private float summonKaltsitTimer = 5f;
-        private float summonLCPTimer = 300f;
+        public float summonKaltsitTimer = 10f;
+        public float summonLCPTimer = 300f;
+        public float summonGoriaTimer = 600f;
+        public float summonKLTimer = 900f;
+        public float summonLamalianTimer = 1500f;
+        public float TheSignOfContinuation = 2100f;
+        public bool isSignOfContinuation = false;
+        public float WillShock = 120f;
+        public int WillShockDamage = 1;
         public static bool isSummoning = false;
-        public static List<string> SummonedCreature = new List<string>();
+        public static bool isWillShocking = false;
+        public static List<string> SummonedCreature = [];
         private int deadCnt = 0;
-        private List<UnitModel> dead = new List<UnitModel>();
+        private List<UnitModel> dead = [];
+        public bool isEmergency = false;
     }
 }

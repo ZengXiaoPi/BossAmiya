@@ -36,6 +36,11 @@ namespace BossAmiya
             {
                 Mon2trModel.AddUnitBuf(new Kaltsit_BloodyAngry());
             }
+            if (this.Mon2trModel.hp <= 0f)
+            {
+                master.summonLCPTimer = 0f;
+            }
+            this.master.CheckDeadCreature();
             return true;
         }
         public override void Escape()
@@ -54,7 +59,11 @@ namespace BossAmiya
         }
         private void Init()
         {
-            summonMon2trTimer = 30f;
+            summonMon2trTimer = 120f;
+            if (RougeManager.Instance.isHasRelic())
+            {
+                summonMon2trTimer = 15f;
+            }
             isSummoning = false;
             Mon2trModel = null;
             SefiraConversationController.Instance.UpdateConversation(Sprites.KaltsitSprite, Sprites.Kaltsit_Color, LocalizeTextDataModel.instance.GetText("Kaltsit_Desc"));
@@ -77,10 +86,11 @@ namespace BossAmiya
                 if (summonMon2trTimer <= 0f && !BossAmiya.SummonedCreature.Contains("Mon2tr"))
                 {
                     Harmony_Patch.logger.Info("Summon Mon2tr.");
+                    this.movable.StopMoving();
                     isSummoning = true;
                     this.model.commandQueue.Clear();
                     BossAmiya.SummonedCreature.Add("Mon2tr");
-                    global::MovableObjectNode movableNode = this.model.GetMovableNode();
+                    MovableObjectNode movableNode = this.model.GetMovableNode();
                     TrackEntry te1 = this.animscript.animator.AnimationState.SetAnimation(0, "Skill_Begin", false);
                     te1.Complete += delegate
                     {
@@ -129,8 +139,14 @@ namespace BossAmiya
                 childCreatureModel.GetMovableNode().Assign(node);
                 childCreatureModel.SetSpeed(1.7f);
                 childCreatureModel.baseMaxHp = 2000;
+                childCreatureModel.hp = 2000;
                 childCreatureModel.SetDefenseId("Mon2tr");
                 Mon2trModel = childCreatureModel;
+                if (childCreatureModel.script is Mon2tr)
+                {
+                    Mon2tr mon2tr = childCreatureModel.script as Mon2tr;
+                    mon2tr.kaltsit = this;
+                }
                 master.childs.Add(childCreatureModel);
             }
             catch (Exception ex)
@@ -151,7 +167,7 @@ namespace BossAmiya
             if (unit is CreatureModel)
             {
                 CreatureModel creatureModel = unit as CreatureModel;
-                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && !(creatureModel.script is BossAmiya) && !(creatureModel.script is Mon2tr) && !(creatureModel.script is LCP);
+                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && Extension.CheckIsHostileCreature(creatureModel);
             }
             else
             {
@@ -292,7 +308,6 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 3.5f))
                 {
-                    MovableObjectNode movableNode = this.target.GetMovableNode();
                     if (!script.IsSummonedMon2tr)
                     {
                         this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 7, 15));

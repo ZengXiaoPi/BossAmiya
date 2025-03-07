@@ -11,10 +11,22 @@ namespace BossAmiya
     /// </summary>
     public class LCP_SpecialBuff2 : UnitBuf
     {
+        public override void Init(UnitModel model)
+        {
+            remainTime = float.MaxValue;
+            base.Init(model);
+        }
         public override float OnTakeDamage(UnitModel attacker, DamageInfo damageInfo)
         {
             if (this.model == null || attacker == null) return base.OnTakeDamage(attacker, damageInfo);
-            if (Extension.IsInRange(this.model, attacker, 2.5f)) return 0.5f;
+            if (!RougeManager.Instance.isHasRelic())
+            {
+                if (Extension.IsInRange(this.model, attacker, 2.5f)) return 0.5f;
+            }
+            else
+            {
+                if (Extension.IsInRange(this.model, attacker, 4f)) return 0.2f;
+            }
             return base.OnTakeDamage(attacker, damageInfo);
         }
     }

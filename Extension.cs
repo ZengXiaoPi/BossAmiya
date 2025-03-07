@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -103,6 +104,44 @@ namespace BossAmiya
                     unitbuf.Destroy();
                 }
             }
+        }
+        private static readonly List<Type> ExcludedTypes =
+        [
+            typeof(BossAmiya),
+            typeof(Goria),
+            typeof(Kaltsit),
+            typeof(LCP),
+            typeof(Mon2tr),
+            typeof(KL),
+            typeof(TSLZ),
+            typeof(Lamalian)
+        ];
+
+        public static bool CheckIsHostileCreature(CreatureModel creature)
+        {
+            if (ExcludedTypes.Contains(creature.script.GetType()))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        public static List<T> GetRandomElements<T>(IList<T> list, int count)
+        {
+            if (count > list.Count)
+                count = list.Count;
+            var copy = new List<T>(list);
+            var result = new List<T>(count);
+            System.Random rand = new System.Random();
+            for (int i = 0; i < count; i++)
+            {
+                int randomIndex = rand.Next(i, copy.Count);
+                (copy[i], copy[randomIndex]) = (copy[randomIndex], copy[i]);
+                result.Add(copy[i]);
+            }
+            return result;
         }
     }
 }

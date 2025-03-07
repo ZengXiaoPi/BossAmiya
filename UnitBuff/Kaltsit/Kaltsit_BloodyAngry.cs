@@ -8,11 +8,20 @@ namespace BossAmiya
 {
     public class Kaltsit_BloodyAngry : UnitBuf
     {
+        public override void Init(UnitModel model)
+        {
+            remainTime = float.MaxValue;
+            base.Init(model);
+        }
         public override float OnTakeDamage(UnitModel attacker, DamageInfo damageInfo)
         {
+            if (RougeManager.Instance.isHasRelic())
+            {
+                return 1.5f;
+            }
             return 2.25f;
         }
-        public override float GetDamageFactor()
+        public override float OnGiveDamageMult(UnitModel target, DamageInfo dmg)
         {
             return 2.25f;
         }

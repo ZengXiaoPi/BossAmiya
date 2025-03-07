@@ -1,12 +1,15 @@
 ﻿using Spine;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using static BossAmiya.Mon2trAnim;
+using UnityEngine;
 
 namespace BossAmiya
 {
-    public class Mon2tr : CreatureBase
+    public class TSLZ : CreatureBase
     {
         private ChildCreatureModel Model
         {
@@ -23,14 +26,14 @@ namespace BossAmiya
             }
             this.model.CheckNearWorkerEncounting();
             List<UnitModel> nearEnemy = this.GetNearEnemy();
-            if (nearEnemy.Count > 0 && !(this.model.GetCurrentCommand() is Mon2trAttackCommand))
+            if (nearEnemy.Count > 0 && !(this.model.GetCurrentCommand() is TSLZMoveToAgentCommand))
             {
                 this.model.commandQueue.Clear();
-                this.model.commandQueue.SetAgentCommand(new Mon2trAttackCommand(nearEnemy[0]));
+                this.model.commandQueue.SetAgentCommand(new TSLZMoveToAgentCommand(nearEnemy[0]));
             }
             else
             {
-                if (!(this.model.GetCurrentCommand() is MoveCreatureCommand) && !(this.model.GetCurrentCommand() is Mon2trAttackCommand))
+                if (!(this.model.GetCurrentCommand() is MoveCreatureCommand) && !(this.model.GetCurrentCommand() is TSLZMoveToAgentCommand))
                 {
                     this.MakeMovement();
                 }
@@ -41,13 +44,15 @@ namespace BossAmiya
             this.master.childs.Remove(this.Model);
             this.isInited = false;
             this.animscript.PlayDeadMotion();
+            KLInstance.TSLZList.Remove(this.model);
+            this.master.CheckDeadCreature();
             return true;
         }
         public override void OnViewInit(CreatureUnit unit)
         {
             try
             {
-                animscript = (Mon2trAnim)unit.animTarget;
+                animscript = (TSLZAnim)unit.animTarget;
                 animscript.SetScript(this);
             }
             catch (Exception ex)
@@ -57,7 +62,6 @@ namespace BossAmiya
         }
         private void Init()
         {
-            SefiraConversationController.Instance.UpdateConversation(Sprites.Mon2trSprite, Sprites.Mon2tr_Color, LocalizeTextDataModel.instance.GetText("Mon2tr_Desc"));
             isInited = true;
         }
         public override void Escape()
@@ -96,7 +100,7 @@ namespace BossAmiya
             if (unit is CreatureModel)
             {
                 CreatureModel creatureModel = unit as CreatureModel;
-                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && !(creatureModel.script is BossAmiya) && !(creatureModel.script is Kaltsit) && !(creatureModel.script is LCP);
+                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && Extension.CheckIsHostileCreature(creatureModel);
             }
             else
             {
@@ -112,8 +116,7 @@ namespace BossAmiya
             {
                 foreach (MovableObjectNode movableObjectNode in passage.GetEnteredTargets())
                 {
-                    bool flag2 = this.IsHostile(movableObjectNode);
-                    if (flag2)
+                    if (this.IsHostile(movableObjectNode) && movableObjectNode.GetUnit() is AgentModel)
                     {
                         UnitModel unit = movableObjectNode.GetUnit();
                         list.Add(unit);
@@ -124,15 +127,20 @@ namespace BossAmiya
         }
         public override string GetName()
         {
-            return LocalizeTextDataModel.instance.GetText("Mon2tr_Name");
+            return LocalizeTextDataModel.instance.GetText("TSLZ_Name");
         }
-        public Mon2trAnim animscript;
+        public override string GetRiskLevel()
+        {
+            return "ZAYIN";
+        }
+        public TSLZAnim animscript;
         public BossAmiya master;
+        public KL KLInstance;
         private bool isInited = false;
     }
-    public class Mon2trAttackCommand : CreatureCommand
+    public class TSLZMoveToAgentCommand : CreatureCommand
     {
-        public Mon2trAttackCommand(UnitModel unitModel)
+        public TSLZMoveToAgentCommand(UnitModel unitModel)
         {
             this.target = unitModel;
         }
@@ -140,8 +148,7 @@ namespace BossAmiya
         {
             base.OnInit(creature, cmdQueue);
             model = creature;
-            script = creature.script as Mon2tr;
-            attackTimer = 0f;
+            script = creature.script as TSLZ;
         }
         public override void Execute()
         {
@@ -154,6 +161,10 @@ namespace BossAmiya
                 else
                 {
                     if (!target.IsAttackTargetable() || !this.actor.IsHostile(target))
+                    {
+                        Finish();
+                    }
+                    else if (!(target is AgentModel))
                     {
                         Finish();
                     }
@@ -180,18 +191,19 @@ namespace BossAmiya
         {
             try
             {
-                attackTimer -= Time.deltaTime;
                 MovableObjectNode movableNode = actor.GetMovableNode();
-                if (Extension.IsInRange(actor, target, 5f) && attackTimer <= 0f)
+                if (Extension.IsInRange(actor, target, 2f))
                 {
-                    attackTimer = 2f;
                     movableNode.StopMoving();
-                    script.animscript.Attack();
-                    script.animscript.Event = new Mon2trEvent(NormalDamage);
+                    AgentModel asAgent = target as AgentModel;
+                    asAgent.Die();
+                    asAgent.visible = false;
+                    asAgent.workerAnimator.gameObject.SetActive(false);
+                    this.script.model.hp = 0f;
                 }
                 else
                 {
-                    if (!movableNode.IsMoving() && this.attackTimer <= 0f)
+                    if (!movableNode.IsMoving())
                     {
                         movableNode.MoveToMovableNode(this.target.GetMovableNode(), false);
                         this.script.animscript.Move();
@@ -203,26 +215,8 @@ namespace BossAmiya
                 Harmony_Patch.logger.Error(ex);
             }
         }
-        public void NormalDamage(TrackEntry trackEntry, Event e)
-        {
-            try
-            {
-                if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 5f))
-                {
-                    MovableObjectNode movableNode = this.target.GetMovableNode();
-                    this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 15, 30));
-                    this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.P, 1, 3));
-                    DamageParticleEffect.Invoker(this.target, RwbpType.R, this.actor);
-                }
-            }
-            catch (Exception ex)
-            {
-                Harmony_Patch.logger.Error(ex);
-            }
-        }
         public UnitModel target;
         public CreatureModel model;
-        public Mon2tr script;
-        private float attackTimer;
+        public TSLZ script;
     }
 }

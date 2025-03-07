@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BossAmiya;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,17 +39,16 @@ namespace BossAmiya
         {
             var bundle = AssetBundle.LoadFromFile(Harmony_Patch.path + "/AssetsBundle/darkelement");
             elementUI = bundle.LoadAsset<GameObject>("DarkElement");
-            bundle.Unload(false);
         }
         public void AddElementUIToAgent(AgentModel agent)
         {
             var newElementUI = GameObject.Instantiate(elementUI);
             var MaskSystem = newElementUI.transform.Find("MaskSystem");
             var script = MaskSystem.gameObject.AddComponent<DarkElementController>();
+            script.maskImage = MaskSystem.GetComponent<Image>();
             elementControllers.Add(agent, script);
-            script.Reset();
             newElementUI.transform.SetParent(agent.GetUnit().agentUI.transform, false);
-            newElementUI.transform.localPosition = new Vector3(-300, 0, 0);
+            newElementUI.transform.localPosition = new Vector3(-470, 0, 0);
             newElementUI.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
             elementUIs.Add(agent, newElementUI);
         }
@@ -61,6 +61,7 @@ namespace BossAmiya
             }
             if (elementControllers.ContainsKey(agent))
             {
+                GameObject.Destroy(elementControllers[agent]);
                 elementControllers.Remove(agent);
             }
         }
@@ -74,9 +75,5 @@ public class DarkElementController : MonoBehaviour
     {
         percentage = Mathf.Clamp(percentage, 0, 100);
         maskImage.fillAmount = percentage / 100f;
-    }
-    public void Reset()
-    {
-        maskImage = GetComponent<Image>();
     }
 }

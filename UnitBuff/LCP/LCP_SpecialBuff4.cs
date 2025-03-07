@@ -12,18 +12,14 @@ namespace BossAmiya
     /// </summary>
     public class LCP_SpecialBuff4 : UnitBuf
     {
+        public override void Init(UnitModel model)
+        {
+            remainTime = 2;
+            base.Init(model);
+        }
         public override float MovementScale()
         {
             return 0.6f;
         }
-        public override void FixedUpdate()
-        {
-            _time -= Time.deltaTime;
-            if (_time <= 0)
-            {
-                Destroy();
-            }
-        }
-        private float _time = 2f;
     }
 }

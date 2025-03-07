@@ -12,18 +12,14 @@ namespace BossAmiya
     /// </summary>
     public class LCP_SpecialBuff5 : UnitBuf
     {
+        public override void Init(UnitModel model)
+        {
+            remainTime = 10f;
+            base.Init(model);
+        }
         public override float OnTakeDamage(UnitModel attacker, DamageInfo damageInfo)
         {
             return 1.15f;
         }
-        public override void FixedUpdate()
-        {
-            _time -= Time.deltaTime;
-            if (_time <= 0)
-            {
-                Destroy();
-            }
-        }
-        private float _time = 10f;
     }
 }

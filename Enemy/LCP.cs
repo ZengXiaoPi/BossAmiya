@@ -32,6 +32,8 @@ namespace BossAmiya
             isInited = false;
             this.master.childs.Remove(this.Model);
             this.animscript.PlayDeadMotion();
+            this.master.summonGoriaTimer = 0f;
+            this.master.CheckDeadCreature();
             return true;
         }
         public override void Escape()
@@ -122,7 +124,7 @@ namespace BossAmiya
             if (unit is CreatureModel)
             {
                 CreatureModel creatureModel = unit as CreatureModel;
-                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && !(creatureModel.script is BossAmiya) && !(creatureModel.script is Mon2tr) && !(creatureModel.script is Kaltsit);
+                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && Extension.CheckIsHostileCreature(creatureModel);
             }
             else
             {
@@ -132,7 +134,7 @@ namespace BossAmiya
         }
         public List<UnitModel> GetNearEnemy()
         {
-            List<UnitModel> list = new List<UnitModel>();
+            List<UnitModel> list = [];
             PassageObjectModel passage = this.model.GetMovableNode().GetPassage();
             if (passage != null)
             {
@@ -214,7 +216,7 @@ namespace BossAmiya
                         this.MoveToNormalAttack();
                     }
                 }
-                else if (script.LCPPhase == 2 && script.SweepingCeremonyMP >= 9 && !script.isAttacking)
+                else if (script.LCPPhase == 2 && !script.isAttacking && ((script.SweepingCeremonyMP >= 9 && !RougeManager.Instance.isHasRelic()) || (script.SweepingCeremonyMP >= 7 && RougeManager.Instance.isHasRelic())))
                 {
                     this.CeremonyAttack();
                 }
@@ -304,7 +306,10 @@ namespace BossAmiya
                 script.isAttacking = true;
                 SweepingShotCount = 0;
                 movableNode.StopMoving();
-                script.model.AddUnitBuf(new LCP_SpecialBuff7());
+                if (!RougeManager.Instance.isHasRelic())
+                {
+                    script.model.AddUnitBuf(new LCP_SpecialBuff7());
+                }
                 script.animscript.SweepingCeremony();
                 script.animscript.Event = new LCPEvent(SweepingCeremonyDamage);
             }
@@ -319,14 +324,13 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack" && Extension.IsInRange(actor, targets[0], 3f))
                 {
-                    MovableObjectNode movableNode = targets[0].GetMovableNode();
                     if (script.LCPPhase == 1)
                     {
                         if (!Extension.HasBuff(targets[0], typeof(LCP_SpecialBuff3)))
                         {
                             targets[0].AddUnitBuf(new LCP_SpecialBuff3());
                         }
-                        targets[0].TakeDamage(this.actor, new DamageInfo(RwbpType.R, 14, 24));
+                        targets[0].TakeDamage(this.actor, new DamageInfo(RwbpType.R, 10, 15));
                         script.GreatAttackMP++;
                     }
                     else
@@ -335,7 +339,7 @@ namespace BossAmiya
                         {
                             targets[0].AddUnitBuf(new LCP_SpecialBuff4());
                         }
-                        targets[0].TakeDamage(this.actor, new DamageInfo(RwbpType.R, 18, 36));
+                        targets[0].TakeDamage(this.actor, new DamageInfo(RwbpType.R, 12, 25));
                         script.GreatAttackMP++;
                         script.SweepingCeremonyMP++;
                     }
@@ -358,7 +362,6 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack" && Extension.IsInRange(actor, targets[0], 3.5f))
                 {
-                    MovableObjectNode movableNode = targets[0].GetMovableNode();
                     if (script.LCPPhase == 1)
                     {
                         if (!Extension.HasBuff(targets[0], typeof(LCP_SpecialBuff5)))
@@ -378,7 +381,7 @@ namespace BossAmiya
                         script.GreatAttackMP = 0;
                         script.SweepingCeremonyMP++;
                     }
-                    DamageParticleEffect.Invoker(targets[0], RwbpType.R, this.actor);
+                    DamageParticleEffect.Invoker(targets[0], RwbpType.P, this.actor);
                 }
                 else
                 {
@@ -397,7 +400,7 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack")
                 {
-                    if (SweepingShotCount < 120 && targets.Count >0)
+                    if (SweepingShotCount < 120 && targets.Count > 0)
                     {
                         var target = targets[UnityEngine.Random.Range(0, targets.Count)];
                         PassageObjectModel passage = target.GetMovableNode().GetPassage();
@@ -408,8 +411,17 @@ namespace BossAmiya
                         else
                         {
                             MovableObjectNode movableNode = target.GetMovableNode();
-                            target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 6, 8));
-                            DamageParticleEffect.Invoker(target, RwbpType.R, this.actor);
+                            if (!RougeManager.Instance.isHasRelic())
+                            {
+                                target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 6, 8));
+                                DamageParticleEffect.Invoker(target, RwbpType.R, this.actor);
+                            }
+                            else
+                            {
+                                Harmony_Patch.RealDamage_TempList.Add(target);
+                                target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 4, 6));
+                                DamageParticleEffect.Invoker(target, RwbpType.R, this.actor);
+                            }
                         }
                         SweepingShotCount++;
                     }
