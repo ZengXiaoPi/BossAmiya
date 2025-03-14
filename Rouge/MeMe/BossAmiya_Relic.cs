@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace BossAmiya
 {
+    [Serializable]
     public class BossAmiya_Relic : MemeScriptBase
     {
         public override float AgentDamageTimes()

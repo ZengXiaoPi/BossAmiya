@@ -46,7 +46,7 @@ namespace BossAmiya
                 List<UnitModel> luckyUnits = new List<UnitModel>();
                 foreach (UnitModel unit in allUnits)
                 {
-                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 5f))
+                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 3f))
                     {
                         luckyUnits.Add(unit);
                     }

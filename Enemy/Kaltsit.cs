@@ -32,13 +32,16 @@ namespace BossAmiya
             this.master.childs.Remove(this.Model);
             this.isInited = false;
             this.animscript.PlayDeadMotion();
-            if (this.Mon2trModel != null && this.Mon2trModel.hp > 0f)
+            if (this.Mon2trModel != null)
             {
-                Mon2trModel.AddUnitBuf(new Kaltsit_BloodyAngry());
-            }
-            if (this.Mon2trModel.hp <= 0f)
-            {
-                master.summonLCPTimer = 0f;
+                if (this.Mon2trModel.hp > 0f)
+                {
+                    Mon2trModel.AddUnitBuf(new Kaltsit_BloodyAngry());
+                }
+                if (this.Mon2trModel.hp <= 0f)
+                {
+                    master.summonLCPTimer = 0f;
+                }
             }
             this.master.CheckDeadCreature();
             return true;
@@ -59,7 +62,7 @@ namespace BossAmiya
         }
         private void Init()
         {
-            summonMon2trTimer = 120f;
+            summonMon2trTimer = 30f;
             if (RougeManager.Instance.isHasRelic())
             {
                 summonMon2trTimer = 15f;
@@ -177,7 +180,7 @@ namespace BossAmiya
         }
         public List<UnitModel> GetNearEnemy()
         {
-            List<UnitModel> list = new List<UnitModel>();
+            List<UnitModel> list = [];
             PassageObjectModel passage = this.model.GetMovableNode().GetPassage();
             if (passage != null)
             {
