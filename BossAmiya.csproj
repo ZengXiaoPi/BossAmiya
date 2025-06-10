@@ -96,10 +96,6 @@
     <Compile Include="Enemy\Lamalian.cs" />
     <Compile Include="Enemy\Reid.cs" />
     <Compile Include="Enemy\TSLZ.cs" />
-    <Compile Include="Equipment\Amiya_MentalCrash.cs" />
-    <Compile Include="Equipment\Amiya_RecoverMP.cs" />
-    <Compile Include="Equipment\BossAmiya_weapon.cs" />
-    <Compile Include="Equipment\EquipmentPatch.cs" />
     <Compile Include="Harmony_Patch.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="Enemy\Kaltsit.cs" />
