@@ -44,9 +44,6 @@
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\Managed\LobotomyBaseModLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="NewGameMode">
-      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\LobotomyCorp\LobotomyCorp_Data\BaseMods\ykmt_LobotomyRougeLike\NewGameMode.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -86,6 +83,7 @@
   <ItemGroup>
     <Compile Include="Anim\KLAnim.cs" />
     <Compile Include="Anim\LamalianAnim.cs" />
+    <Compile Include="Anim\ReidAnim.cs" />
     <Compile Include="Anim\TSLZAnim.cs" />
     <Compile Include="Enemy\BossAmiya.cs" />
     <Compile Include="Anim\BossAmiyaAnim.cs" />
@@ -96,7 +94,12 @@
     <Compile Include="Anim\GoriaAnim.cs" />
     <Compile Include="Enemy\KL.cs" />
     <Compile Include="Enemy\Lamalian.cs" />
+    <Compile Include="Enemy\Reid.cs" />
     <Compile Include="Enemy\TSLZ.cs" />
+    <Compile Include="Equipment\Amiya_MentalCrash.cs" />
+    <Compile Include="Equipment\Amiya_RecoverMP.cs" />
+    <Compile Include="Equipment\BossAmiya_weapon.cs" />
+    <Compile Include="Equipment\EquipmentPatch.cs" />
     <Compile Include="Harmony_Patch.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="Enemy\Kaltsit.cs" />
@@ -107,12 +110,13 @@
     <Compile Include="Anim\Mon2trAnim.cs" />
     <Compile Include="HPHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rouge\MeMe\BossAmiya_Relic.cs" />
-    <Compile Include="Rouge\RougeManager.cs" />
+    <Compile Include="HardModeManager.cs" />
     <Compile Include="Sprites.cs" />
     <Compile Include="UnitBuff\Element\Element_ElementBreaking.cs" />
     <Compile Include="UnitBuff\Goria\Goria_CantMove.cs" />
     <Compile Include="UnitBuff\Kaltsit\Kaltsit_BloodyAngry.cs" />
+    <Compile Include="UnitBuff\Kaltsit\Kaltsit_HardBuff.cs" />
+    <Compile Include="UnitBuff\Kaltsit\Mon2tr_HardBuff.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff1.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff2.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff3.cs" />
@@ -120,6 +124,12 @@
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff6.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff4.cs" />
     <Compile Include="UnitBuff\LCP\LCP_SpecialBuff7.cs" />
+    <Compile Include="UnitBuff\Reid\Reid_Fire.cs" />
+    <Compile Include="UnitBuff\Reid\Reid_Rush.cs" />
+    <Compile Include="UnitBuff\Reid\Reid_RushUpgrade.cs" />
+    <Compile Include="UnitBuff\Reid\Reid_Slow.cs" />
+    <Compile Include="UnitBuff\Reid\Reid_UpgradeBuff.cs" />
+    <Compile Include="UnitBuff\Reid\Reid_weak.cs" />
     <Compile Include="YKMTLog.cs" />
   </ItemGroup>
   <ItemGroup>

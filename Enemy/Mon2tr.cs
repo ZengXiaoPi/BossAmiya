@@ -65,8 +65,16 @@ namespace BossAmiya
         }
         private void Init()
         {
-            SefiraConversationController.Instance.UpdateConversation(Sprites.Mon2trSprite, Sprites.Mon2tr_Color, LocalizeTextDataModel.instance.GetText("Mon2tr_Desc"));
             isInited = true;
+            if (HardModeManager.Instance.isHardMode())
+            {
+                this.model.AddUnitBuf(new Mon2tr_HardBuff(this));
+                SefiraConversationController.Instance.UpdateConversation(Sprites.Mon2trSprite, Sprites.Mon2tr_Color, LocalizeTextDataModel.instance.GetText("Mon2tr_Desc_Hard"));
+            }
+            else
+            {
+                SefiraConversationController.Instance.UpdateConversation(Sprites.Mon2trSprite, Sprites.Mon2tr_Color, LocalizeTextDataModel.instance.GetText("Mon2tr_Desc"));
+            }
         }
         public override void Escape()
         {
@@ -132,7 +140,14 @@ namespace BossAmiya
         }
         public override string GetName()
         {
-            return LocalizeTextDataModel.instance.GetText("Mon2tr_Name");
+            if (!HardModeManager.Instance.isHardMode())
+            {
+                return LocalizeTextDataModel.instance.GetText("Mon2tr_Name");
+            }
+            else
+            {
+                return LocalizeTextDataModel.instance.GetText("Mon2tr_Name_Hard");
+            }
         }
         public Mon2trAnim animscript;
         public BossAmiya master;
@@ -191,7 +206,7 @@ namespace BossAmiya
             {
                 attackTimer -= Time.deltaTime;
                 MovableObjectNode movableNode = actor.GetMovableNode();
-                if (Extension.IsInRange(actor, target, 5f) && attackTimer <= 0f)
+                if (((!HardModeManager.Instance.isHardMode() && Extension.IsInRange(actor, target, 5f)) || (HardModeManager.Instance.isHardMode() && Extension.IsInRange(actor, target, 6.5f))) && attackTimer <= 0f)
                 {
                     attackTimer = 2f;
                     movableNode.StopMoving();
@@ -216,11 +231,22 @@ namespace BossAmiya
         {
             try
             {
-                if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 5f))
+                if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 5f) && !HardModeManager.Instance.isHardMode())
                 {
-                    this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 15, 30));
-                    this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.P, 1, 3));
+                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 15, 30));
+                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.P, 1, 3));
+                        DamageParticleEffect.Invoker(this.target, RwbpType.R, this.actor);
+                }
+                else if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 6.5f) && HardModeManager.Instance.isHardMode())
+                {
+                    Harmony_Patch.RealDamage_TempList.Add(target);
+                    this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 8, 15));
                     DamageParticleEffect.Invoker(this.target, RwbpType.R, this.actor);
+                    this.model.hp += this.model.maxHp * 0.01f;
+                    if (this.model.hp > this.model.maxHp)
+                    {
+                        this.model.hp = this.model.maxHp;
+                    }
                 }
             }
             catch (Exception ex)

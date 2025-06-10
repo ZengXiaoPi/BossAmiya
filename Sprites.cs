@@ -17,6 +17,7 @@ namespace BossAmiya
         public static Sprite KLSprite = Extension.CreateSprite("/Creature/Portrait/KL.png", SpriteMeshType.FullRect);
         public static Sprite TSLZSprite = Extension.CreateSprite("/Creature/Portrait/TSLZ.png", SpriteMeshType.FullRect);
         public static Sprite LamalianSprite = Extension.CreateSprite("/Creature/Portrait/Lamalian.png", SpriteMeshType.FullRect);
+        public static Sprite ReidSprite = Extension.CreateSprite("/Creature/Portrait/Reid.png", SpriteMeshType.FullRect);
 
         public static Color Amiya_Color = new Color32(184, 183, 183, byte.MaxValue);
         public static Color Kaltsit_Color = new Color32(38, 182, 50, byte.MaxValue);
@@ -26,6 +27,7 @@ namespace BossAmiya
         public static Color KL_Color = new Color32(151, 144, 131, byte.MaxValue);
         public static Color TSLZ_Color = new Color32(126, 116, 99, byte.MaxValue);
         public static Color Lamalian_Color = new Color32(181, 188, 203, byte.MaxValue);
+        public static Color Reid_Color = new Color32(200, 43, 35, byte.MaxValue);
 
         public static Color Escape_Relic_Color = new Color32(160, 67, 68, byte.MaxValue);
     }

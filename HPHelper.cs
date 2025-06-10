@@ -22,6 +22,8 @@ namespace HPHelper
 
     [AttributeUsage(AttributeTargets.Method)]
     public class HPPostfixAttribute : Attribute { }
+    [AttributeUsage(AttributeTargets.Method)]
+    public class HPTranspilerAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class HPHelperAttribute : Attribute
@@ -78,7 +80,6 @@ namespace HPHelper
             TargetUseNoParameter = true;
         }
     }
-
     public static class HPPatcher
     {
         /// <summary>
@@ -91,7 +92,7 @@ namespace HPHelper
             Harmony_Patch.logger.Error(message);
         }
         /// <summary>
-        /// 自动Patch所有由[HPHelper]与[HPPrefix]或[HPPostfix]标记的方法
+        /// 自动Patch所有由[HPHelper]与[HPPrefix]或[HPPostfix]或[Transpiler]标记的方法
         /// </summary>
         /// <param name="harmony">HarmonyInstance实例</param>
         /// <param name="patchClass">你需要Patch的类</param>
@@ -120,12 +121,17 @@ namespace HPHelper
                 );
                 if (hpHelper == null) return;
 
+                int fixTypeCount = 0;
                 bool isPrefix = patchMethod.IsDefined(typeof(HPPrefixAttribute), false);
                 bool isPostfix = patchMethod.IsDefined(typeof(HPPostfixAttribute), false);
+                bool isTranspiler = patchMethod.IsDefined(typeof(HPTranspilerAttribute), false);
 
-                if (!isPrefix && !isPostfix) return;
-                if (isPrefix && isPostfix)
-                    throw new InvalidOperationException("Method cannot have both prefix and postfix attributes");
+                if (isPrefix) fixTypeCount++;
+                if (isPostfix) fixTypeCount++;
+                if (isTranspiler) fixTypeCount++;
+                if (fixTypeCount == 0) return;
+                if (fixTypeCount > 1)
+                    throw new InvalidOperationException("Method cannot have more than one fix type attribute");
 
                 Type targetType;
                 if (ReferenceEquals(hpHelper.TargetType, null))
@@ -159,17 +165,18 @@ namespace HPHelper
                 harmony.Patch(
                     original: originalMethod,
                     prefix: isPrefix ? harmonyMethod : null,
-                    postfix: isPostfix ? harmonyMethod : null
+                    postfix: isPostfix ? harmonyMethod : null,
+                    transpiler: isTranspiler ? harmonyMethod : null
                 );
             }
             catch (Exception ex)
             {
-                LogError("Error processing method: " + ex.ToString());
+                LogError($"Error processing method {patchMethod.Name}: " + ex.ToString());
             }
         }
         public static Type[] GetParameterTypes(Type type, string methodName)
         {
-            MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+            MethodInfo[] methods = type.GetMethods(AccessTools.all);
             List<MethodInfo> methodList = new List<MethodInfo>();
             foreach (var method in methods)
             {

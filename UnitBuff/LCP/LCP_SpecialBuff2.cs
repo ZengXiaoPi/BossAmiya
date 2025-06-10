@@ -19,7 +19,7 @@ namespace BossAmiya
         public override float OnTakeDamage(UnitModel attacker, DamageInfo damageInfo)
         {
             if (this.model == null || attacker == null) return base.OnTakeDamage(attacker, damageInfo);
-            if (!RougeManager.Instance.isHasRelic())
+            if (!HardModeManager.Instance.isHardMode())
             {
                 if (Extension.IsInRange(this.model, attacker, 2.5f)) return 0.5f;
             }

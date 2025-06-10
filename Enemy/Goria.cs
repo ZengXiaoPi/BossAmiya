@@ -222,7 +222,7 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 5f))
                 {
-                    if (!RougeManager.Instance.isHasRelic())
+                    if (!HardModeManager.Instance.isHardMode())
                     {
                         this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 30, 50));
                         this.target.AddUnitBuf(new Goria_CantMove());

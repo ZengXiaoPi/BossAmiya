@@ -15,9 +15,9 @@ namespace BossAmiya
         }
         public override float OnTakeDamage(UnitModel attacker, DamageInfo damageInfo)
         {
-            if (RougeManager.Instance.isHasRelic())
+            if (HardModeManager.Instance.isHardMode())
             {
-                return 1.5f;
+                return 1f;
             }
             return 2.25f;
         }

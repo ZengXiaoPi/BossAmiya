@@ -1,5 +1,4 @@
-﻿using NewGameMode;
-using Spine;
+﻿using Spine;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,7 +22,7 @@ namespace BossAmiya
             }
             if (notice == NoticeName.OnAgentDead)
             {
-                AgentModel agentModel = param[0] as AgentModel;
+                WorkerModel agentModel = param[0] as WorkerModel;
                 if (agentModel == null)
                 {
                     return;
@@ -61,7 +60,7 @@ namespace BossAmiya
                 }
                 this.dead.Add(officerModel);
                 this.deadCnt++;
-                if (this.deadCnt >= 5)
+                if (this.deadCnt >= 10)
                 {
                     this.deadCnt = 0;
                     this.model.SubQliphothCounter();
@@ -111,7 +110,7 @@ namespace BossAmiya
                     isSignOfContinuation = false;
                     WillShock = 30f;
                     WillShockDamage = 6;
-                    if (!RougeManager.Instance.isHasRelic())
+                    if (!HardModeManager.Instance.isHardMode())
                     {
                         isEmergency = false;
                         RandomEventLayer.currentLayer.AddTypo(RandomEventLayer.currentLayer.MakeDefaultTypoSession("ISW-DF", LocalizeTextDataModel.instance.GetText("AmiyaEscape_Title"), LocalizeTextDataModel.instance.GetText("AmiyaEscape_Desc"), Sprites.Amiya_Color, ""));
@@ -153,11 +152,36 @@ namespace BossAmiya
         {
             base.OnStageRelease();
             ParamInit();
+            this.SetObserver(false);
+        }
+        public override void OnStageEnd()
+        {
+            base.OnStageEnd();
+            this.ParamInit();
+            this.SetObserver(false);
         }
         public override void ParamInit()
         {
             deadCnt = 0;
             animscript.Default();
+            if (!this.observingDanger)
+            {
+                this.SetObserver(true);
+            }
+        }
+        private void SetObserver(bool active)
+        {
+            if (active)
+            {
+                global::Notice.instance.Observe(global::NoticeName.OnAgentDead, this);
+                global::Notice.instance.Observe(global::NoticeName.OnOfficerDie, this);
+            }
+            else
+            {
+                global::Notice.instance.Remove(global::NoticeName.OnAgentDead, this);
+                global::Notice.instance.Remove(global::NoticeName.OnOfficerDie, this);
+            }
+            this.observingDanger = active;
         }
         public override void OnViewInit(CreatureUnit unit)
         {
@@ -258,7 +282,7 @@ namespace BossAmiya
             if (WillShock <= 0f && !isWillShocking)
             {
                 isWillShocking = true;
-                if (!RougeManager.Instance.isHasRelic())
+                if (!HardModeManager.Instance.isHardMode())
                 {
                     WillShock = 120f;
                 }
@@ -390,6 +414,10 @@ namespace BossAmiya
                     te3.Complete += delegate
                     {
                         this.animscript.Default();
+                        if (script == "Lamalian")
+                        {
+                            this.MakeChildCreature(this.movable, "Reid", "Custom/ReidAnim");
+                        }
                         this.MakeChildCreature(this.movable, script, anim);
                         BossAmiya.isSummoning = false;
                     };
@@ -443,8 +471,16 @@ namespace BossAmiya
                 childCreatureModel.GetMovableNode().Assign(node);
                 if (ID == "Kaltsit")
                 {
-                    childCreatureModel.baseMaxHp = 750;
-                    childCreatureModel.hp = 750;
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        childCreatureModel.baseMaxHp = 750;
+                        childCreatureModel.hp = 750;
+                    }
+                    else
+                    {
+                        childCreatureModel.baseMaxHp = 2000;
+                        childCreatureModel.hp = 2000;
+                    }
                     childCreatureModel.SetSpeed(1.5f);
                     childCreatureModel.SetDefenseId("Kaltsit");
                     childCreatureModel.RiskLevel = RiskLevel.WAW;
@@ -480,6 +516,14 @@ namespace BossAmiya
                     childCreatureModel.SetSpeed(1.6f);
                     childCreatureModel.SetDefenseId("Lamalian");
                     childCreatureModel.RiskLevel = RiskLevel.WAW;
+                }
+                else if (ID == "Reid")
+                {
+                    childCreatureModel.baseMaxHp = 1800;
+                    childCreatureModel.hp = 1800;
+                    childCreatureModel.SetSpeed(2.3f);
+                    childCreatureModel.SetDefenseId("Reid");
+                    childCreatureModel.RiskLevel = RiskLevel.ALEPH;
                 }
                 this.childs.Add(childCreatureModel);
             }
@@ -541,5 +585,6 @@ namespace BossAmiya
         private int deadCnt = 0;
         private List<UnitModel> dead = [];
         public bool isEmergency = false;
+        public bool observingDanger = false;
     }
 }

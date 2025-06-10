@@ -1,6 +1,7 @@
 ﻿using Spine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using static BossAmiya.KaltsitAnim;
 
@@ -63,13 +64,18 @@ namespace BossAmiya
         private void Init()
         {
             summonMon2trTimer = 30f;
-            if (RougeManager.Instance.isHasRelic())
+            if (HardModeManager.Instance.isHardMode())
             {
                 summonMon2trTimer = 15f;
+                this.model.AddUnitBuf(new Kaltsit_HardBuff(this));
+                SefiraConversationController.Instance.UpdateConversation(Sprites.KaltsitSprite, Sprites.Kaltsit_Color, LocalizeTextDataModel.instance.GetText("Kaltsit_Desc_Hard"));
+            }
+            else
+            {
+                SefiraConversationController.Instance.UpdateConversation(Sprites.KaltsitSprite, Sprites.Kaltsit_Color, LocalizeTextDataModel.instance.GetText("Kaltsit_Desc"));
             }
             isSummoning = false;
             Mon2trModel = null;
-            SefiraConversationController.Instance.UpdateConversation(Sprites.KaltsitSprite, Sprites.Kaltsit_Color, LocalizeTextDataModel.instance.GetText("Kaltsit_Desc"));
             isInited = true;
         }
         public override void UniqueEscape()
@@ -141,8 +147,16 @@ namespace BossAmiya
                 childCreatureModel.Escape();
                 childCreatureModel.GetMovableNode().Assign(node);
                 childCreatureModel.SetSpeed(1.7f);
-                childCreatureModel.baseMaxHp = 2000;
-                childCreatureModel.hp = 2000;
+                if (!HardModeManager.Instance.isHardMode())
+                {
+                    childCreatureModel.baseMaxHp = 2000;
+                    childCreatureModel.hp = 2000;
+                }
+                else
+                {
+                    childCreatureModel.baseMaxHp = 5000;
+                    childCreatureModel.hp = 5000;
+                }
                 childCreatureModel.SetDefenseId("Mon2tr");
                 Mon2trModel = childCreatureModel;
                 if (childCreatureModel.script is Mon2tr)
@@ -203,7 +217,14 @@ namespace BossAmiya
 
         public override string GetName()
         {
-            return LocalizeTextDataModel.instance.GetText("Kaltsit_Name");
+            if (!HardModeManager.Instance.isHardMode())
+            {
+                return LocalizeTextDataModel.instance.GetText("Kaltsit_Name");
+            }
+            else
+            {
+                return LocalizeTextDataModel.instance.GetText("Kaltsit_Name_Hard");
+            }
         }
         private void MakeMovement()
         {

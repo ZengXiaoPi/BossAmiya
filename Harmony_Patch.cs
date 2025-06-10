@@ -1,5 +1,6 @@
 ﻿using CommandWindow;
 using CreatureInfo;
+using GlobalBullet;
 using Harmony;
 using HPHelper;
 using System;
@@ -29,37 +30,8 @@ namespace BossAmiya
             {
                 // 初始化凋亡UI
                 ElementUI.Instance.InitAB();
-
-                // 初始化模因检测
-                RougeManager.Instance.Init();
-
                 HPPatcher.PatchAll(harmony, typeof(Harmony_Patch));
-                /*
-                // 真实伤害 for amiya
-                harmony.Patch(typeof(CreatureInfoStatRoot).GetMethod("WorkDamageListInit", AccessTools.all, null, new Type[0], null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("CreatureInfoStatRoot_WorkDamageListInit")), null); errorNum++;
-                harmony.Patch(typeof(WorkAllocateRegion).GetMethod("OnObserved", AccessTools.all, null, new Type[] { typeof(CreatureModel) }, null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("WorkAllocateRegion_OnObserved")), null); errorNum++;
-                harmony.Patch(typeof(WorkerModel).GetMethod("TakeDamage", AccessTools.all, null, new Type[] { typeof(UnitModel), typeof(DamageInfo) }, null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("WorkerModel_TakeDamage")), null); errorNum++;
-                harmony.Patch(typeof(CreatureModel).GetMethod("TakeDamage", AccessTools.all, null, new Type[] { typeof(UnitModel), typeof(DamageInfo) }, null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("CreatureModel_TakeDamage")), null); errorNum++;
-                harmony.Patch(typeof(DamageEffect).GetMethod("SetData", AccessTools.all, null, new Type[] { typeof(RwbpType), typeof(int), typeof(DefenseInfo.Type), typeof(UnitModel) }, null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("DamageEffect_SetData")), null); errorNum++;
-
-                // BGM
-                harmony.Patch(typeof(SoundEffectPlayer).GetMethod("Stop", AccessTools.all, null, new Type[0], null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("SoundEffectPlayer_Stop")), null, null); errorNum++;
-
-                // 镇压区域贴图修正
-                harmony.Patch(typeof(CreatureSuppressRegion).GetMethod("SetData", AccessTools.all, null, new Type[] { typeof(UnitModel) }, null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("CreatureSuppressRegion_SetData")), null); errorNum++;
-
-                // 在结束一天后不得不做的
-                harmony.Patch(typeof(GameManager).GetMethod("EndGame", AccessTools.all, null, new Type[0], null), null, new HarmonyMethod(typeof(Harmony_Patch).GetMethod("GameManager_EndGame")), null); errorNum++;
-
-                // 控制台
-                harmony.Patch(typeof(ConsoleScript).GetMethod("GetHmmCommand", AccessTools.all, null, new Type[] { typeof(string) }, null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("ConsoleScript_GetHmmCommand")), null, null); errorNum++;
-
-                // 凋亡禁止攻击
-                harmony.Patch(typeof(UnitModel).GetMethod("Attack", AccessTools.all, null, new Type[] { typeof(UnitModel) }, null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("UnitModel_Attack")), null, null); errorNum++;
-
-                // 死亡时移除元素UI
-                harmony.Patch(typeof(AgentModel).GetMethod("Die", AccessTools.all, null, new Type[0], null), new HarmonyMethod(typeof(Harmony_Patch).GetMethod("WorkerModel_Die")), null, null); errorNum++;
-                */
+                HPPatcher.PatchAll(harmony, typeof(EquipmentPatch));
             }
             catch (Exception ex)
             {
@@ -97,19 +69,39 @@ namespace BossAmiya
         [HPPrefix]
         public static void WorkerModel_TakeDamage(ref WorkerModel __instance, UnitModel actor, DamageInfo dmg)
         {
-            if (!(actor is CreatureModel)) return;
-            if ((actor as CreatureModel).metaInfo.id != 521892L) return;
-            if (RealDamage_TempList.Contains(__instance)) return;
-            RealDamage_TempList.Add(__instance);
+            if (actor is CreatureModel)
+            {
+                if ((actor as CreatureModel).metaInfo.id != 521892L) return;
+                if (RealDamage_TempList.Contains(__instance)) return;
+                RealDamage_TempList.Add(__instance);
+            }
+            else if (actor is AgentModel)
+            {
+                if ((actor as AgentModel).Equipment.armor.metaInfo.id == 52189301)
+                {
+                    if (RealDamage_TempList.Contains(__instance)) return;
+                    RealDamage_TempList.Add(__instance);
+                }
+            }
         }
         [HPHelper(typeof(CreatureModel), nameof(CreatureModel.TakeDamage), typeof(UnitModel), typeof(DamageInfo))]
         [HPPrefix]
         public static void CreatureModel_TakeDamage(ref CreatureModel __instance, UnitModel actor, DamageInfo dmg)
         {
-            if (!(actor is CreatureModel)) return;
-            if ((actor as CreatureModel).metaInfo.id != 521892L) return;
-            if (RealDamage_TempList.Contains(__instance)) return;
-            RealDamage_TempList.Add(__instance);
+            if (actor is CreatureModel)
+            {
+                if ((actor as CreatureModel).metaInfo.id != 521892L) return;
+                if (RealDamage_TempList.Contains(__instance)) return;
+                RealDamage_TempList.Add(__instance);
+            }
+            else if (actor is AgentModel)
+            {
+                if ((actor as AgentModel).Equipment.armor.metaInfo.id == 52189301)
+                {
+                    if (RealDamage_TempList.Contains(__instance)) return;
+                    RealDamage_TempList.Add(__instance);
+                }
+            }
         }
         [HPHelper(typeof(DamageEffect), "SetData", typeof(RwbpType), typeof(int), typeof(DefenseInfo.Type), typeof(UnitModel))]
         [HPPostfix]
@@ -157,6 +149,18 @@ namespace BossAmiya
             else if (fixcreature.script is Goria)
             {
                 __instance.Portrait.sprite = Sprites.GoriaSprite;
+            }
+            else if (fixcreature.script is Lamalian)
+            {
+                __instance.Portrait.sprite = Sprites.LamalianSprite;
+            }
+            else if (fixcreature.script is TSLZ)
+            {
+                __instance.Portrait.sprite = Sprites.TSLZSprite;
+            }
+            else if (fixcreature.script is Reid)
+            {
+                __instance.Portrait.sprite = Sprites.ReidSprite;
             }
         }
 
@@ -210,6 +214,20 @@ namespace BossAmiya
                             }
                         }
                     }
+                    if (type2 == "mode")
+                    {
+                        if (type3 == "switch")
+                        {
+                            if (HardModeManager.Instance.isHardMode())
+                            {
+                                HardModeManager.Instance.setIsHardMode(false);
+                            }
+                            else
+                            {
+                                HardModeManager.Instance.setIsHardMode(true);
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -244,6 +262,36 @@ namespace BossAmiya
                 {
                     ElementUI.Instance.RemoveElementUIFromAgent((AgentModel)__instance);
                 }
+            }
+        }
+        [HPHelper(typeof(UnitModel), "GetDmgMultiplierByEgoLevel")]
+        [HPPrefix]
+        public static bool UnitModel_GetDmgMultiplierByEgoLevel(int attackLevel, int defenseLevel, ref float __result)
+        {
+            if (RealDamage_TempList.Count > 0)
+            {
+                __result = 1.0f;
+                return false;
+            }
+            return true;
+        }
+        [HPHelper(typeof(GlobalBulletManager), "SlowBullet")]
+        [HPPrefix]
+        public static void GlobalBulletManager_SlowBullet(UnitModel target)
+        {
+            if (target is CreatureModel && (target as CreatureModel).script is Reid)
+            {
+                Reid reid = (target as CreatureModel).script as Reid;
+                if (reid.rushBuff == null) return;
+                if (!HardModeManager.Instance.isHardMode())
+                {
+                    target.AddUnitBuf(new Reid_weak(reid.rushBuff.moveScale / 5f * 1.5f, reid.rushBuff.moveScale / 5f * 30f));
+                }
+                else
+                {
+                    target.AddUnitBuf(new Reid_weak(reid.rushBuff.moveScale / 7.5f * 4f, reid.rushBuff.moveScale / 5f * 60f));
+                }
+                reid.rushBuff.moveScale = 0f;
             }
         }
     }

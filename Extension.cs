@@ -96,15 +96,28 @@ namespace BossAmiya
         public static void RemoveBuff(UnitModel unit, Type buf)
         {
             if (unit == null) return;
-            foreach (UnitBuf unitbuf in unit.GetUnitBufList())
+
+            var bufList = unit.GetUnitBufList();
+            if (bufList == null) return;
+
+            // 使用倒序遍历避免集合修改异常
+            for (int i = bufList.Count - 1; i >= 0; i--)
             {
-                if (buf.IsInstanceOfType(unitbuf))
+                try
                 {
-                    Harmony_Patch.logger.Info("Remove buff: " + buf.Name);
-                    unitbuf.Destroy();
+                    UnitBuf unitbuf = bufList[i];
+                    if (buf.IsInstanceOfType(unitbuf))
+                    {
+                        unit.RemoveUnitBuf(unitbuf);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Harmony_Patch.logger.Error($"Error removing buff at index {i}: {ex.Message}");
                 }
             }
         }
+
         private static readonly List<Type> ExcludedTypes =
         [
             typeof(BossAmiya),
@@ -114,7 +127,8 @@ namespace BossAmiya
             typeof(Mon2tr),
             typeof(KL),
             typeof(TSLZ),
-            typeof(Lamalian)
+            typeof(Lamalian),
+            typeof(Reid)
         ];
 
         public static bool CheckIsHostileCreature(CreatureModel creature)

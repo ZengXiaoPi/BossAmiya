@@ -215,7 +215,7 @@ namespace BossAmiya
                     DamageParticleEffect.Invoker(this.target, RwbpType.B, this.actor);
                     if (target is AgentModel)
                     {
-                        if (!RougeManager.Instance.isHasRelic())
+                        if (!HardModeManager.Instance.isHardMode())
                         {
                             ElementManager.Instance.GiveElementDamage((AgentModel)this.target, 10);
                         }

@@ -114,7 +114,7 @@ namespace BossAmiya
                 childCreatureModel.Escape();
                 childCreatureModel.GetMovableNode().Assign(node);
                 childCreatureModel.SetSpeed(1f);
-                if (!RougeManager.Instance.isHasRelic())
+                if (!HardModeManager.Instance.isHardMode())
                 {
                     childCreatureModel.baseMaxHp = 70;
                     childCreatureModel.hp = 70;
@@ -274,7 +274,7 @@ namespace BossAmiya
             {
                 attackTimer -= Time.deltaTime;
                 MovableObjectNode movableNode = actor.GetMovableNode();
-                if (Extension.IsInRange(actor, target, 5f) && attackTimer <= 0f && ((script.cwjTimer >= 30f && !RougeManager.Instance.isHasRelic()) || (script.cwjTimer >= 20f && RougeManager.Instance.isHasRelic())))
+                if (Extension.IsInRange(actor, target, 5f) && attackTimer <= 0f && ((script.cwjTimer >= 30f && !HardModeManager.Instance.isHardMode()) || (script.cwjTimer >= 20f && HardModeManager.Instance.isHardMode())))
                 {
                     attackTimer = 5.5f;
                     _tempDamageCount = 1;
@@ -309,7 +309,7 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 5f))
                 {
-                    if (!RougeManager.Instance.isHasRelic())
+                    if (!HardModeManager.Instance.isHardMode())
                     {
                         this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.W, 4, 12));
                         DamageParticleEffect.Invoker(this.target, RwbpType.W, this.actor);

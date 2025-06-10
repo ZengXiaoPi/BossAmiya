@@ -46,14 +46,18 @@ namespace BossAmiya
                 List<UnitModel> luckyUnits = new List<UnitModel>();
                 foreach (UnitModel unit in allUnits)
                 {
-                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 3f))
+                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 3f) && !HardModeManager.Instance.isHardMode())
+                    {
+                        luckyUnits.Add(unit);
+                    }
+                    if (script.IsHostile(unit.GetMovableNode()) && IsInRange(script.model, unit, 4.5f) && HardModeManager.Instance.isHardMode())
                     {
                         luckyUnits.Add(unit);
                     }
                 }
                 foreach (UnitModel unit in luckyUnits)
                 {
-                    if (!RougeManager.Instance.isHasRelic())
+                    if (!HardModeManager.Instance.isHardMode())
                     {
                         unit.TakeDamage(script.model, new DamageInfo(RwbpType.R, 200));
                     }

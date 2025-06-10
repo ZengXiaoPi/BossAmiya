@@ -216,7 +216,7 @@ namespace BossAmiya
                         this.MoveToNormalAttack();
                     }
                 }
-                else if (script.LCPPhase == 2 && !script.isAttacking && ((script.SweepingCeremonyMP >= 9 && !RougeManager.Instance.isHasRelic()) || (script.SweepingCeremonyMP >= 7 && RougeManager.Instance.isHasRelic())))
+                else if (script.LCPPhase == 2 && !script.isAttacking && ((script.SweepingCeremonyMP >= 9 && !HardModeManager.Instance.isHardMode()) || (script.SweepingCeremonyMP >= 7 && HardModeManager.Instance.isHardMode())))
                 {
                     this.CeremonyAttack();
                 }
@@ -306,7 +306,7 @@ namespace BossAmiya
                 script.isAttacking = true;
                 SweepingShotCount = 0;
                 movableNode.StopMoving();
-                if (!RougeManager.Instance.isHasRelic())
+                if (!HardModeManager.Instance.isHardMode())
                 {
                     script.model.AddUnitBuf(new LCP_SpecialBuff7());
                 }
@@ -411,7 +411,7 @@ namespace BossAmiya
                         else
                         {
                             MovableObjectNode movableNode = target.GetMovableNode();
-                            if (!RougeManager.Instance.isHasRelic())
+                            if (!HardModeManager.Instance.isHardMode())
                             {
                                 target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 6, 8));
                                 DamageParticleEffect.Invoker(target, RwbpType.R, this.actor);
