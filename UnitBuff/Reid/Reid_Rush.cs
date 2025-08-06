@@ -2,9 +2,9 @@
 
 namespace BossAmiya
 {
-    public class Reid_Rush : UnitBuf
+    public class Reid_Rush_OLD : UnitBuf
     {
-        public Reid_Rush()
+        public Reid_Rush_OLD()
         {
             this.remainTime = float.MaxValue;
             this.moveScale = 0f;
@@ -13,27 +13,34 @@ namespace BossAmiya
         }
         public override void FixedUpdate()
         {
-            keepTime += Time.deltaTime;
-            _timer += Time.deltaTime;
-            if (!HardModeManager.Instance.isHardMode() && _timer >= 0.1f)
+            try
             {
-                moveScale += 0.018f;
-                if (moveScale > 5f)
+                keepTime += Time.deltaTime;
+                _timer += Time.deltaTime;
+                if (!HardModeManager.Instance.isHardMode() && _timer >= 0.1f)
                 {
-                    moveScale = 5f;
+                    moveScale += 0.018f;
+                    if (moveScale > 5f)
+                    {
+                        moveScale = 5f;
+                    }
+                    _timer = 0f;
                 }
-                _timer = 0f;
-            }
-            else if (_timer >= 0.1f)
-            {
-                moveScale += 0.03f;
-                if (moveScale > 7.5f)
+                else if (_timer >= 0.1f)
                 {
-                    moveScale = 7.5f;
+                    moveScale += 0.03f;
+                    if (moveScale > 7.5f)
+                    {
+                        moveScale = 7.5f;
+                    }
+                    _timer = 0f;
                 }
-                _timer = 0f;
-            }
             (model as CreatureModel).movementScale = 1f + moveScale;
+            }
+            catch (System.Exception ex)
+            {
+                Harmony_Patch.logger.Error(ex);
+            }
         }
         public float _timer;
         public float moveScale;

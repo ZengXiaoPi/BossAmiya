@@ -53,6 +53,17 @@ namespace BossAmiya
             }
             return result;
         }
+        public static Texture2D CreateTexture2D(string file)
+        {
+            Texture2D result = null;
+            string text = Harmony_Patch.path + "/" + file;
+            if (File.Exists(text))
+            {
+                result = new Texture2D(1, 1);
+                result.LoadImage(File.ReadAllBytes(text));
+            }
+            return result;
+        }
         public static void RecoveryHPForCreature(CreatureModel model, int recoveryHP)
         {
             if (model.hp + recoveryHP > model.metaInfo.maxHp)

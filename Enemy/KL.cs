@@ -54,8 +54,8 @@ namespace BossAmiya
             {
                 unit.hp = 0;
             }
-            this.master.summonLamalianTimer = 0f;
             this.master.CheckDeadCreature();
+            this.master.summonLamalianTimer = 0f;
             return true;
         }
         public override void OnViewInit(CreatureUnit unit)

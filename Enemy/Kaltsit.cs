@@ -44,7 +44,11 @@ namespace BossAmiya
                     master.summonLCPTimer = 0f;
                 }
             }
-            this.master.CheckDeadCreature();
+            else
+            {
+                master.summonLCPTimer = 0f;
+            }
+                this.master.CheckDeadCreature();
             return true;
         }
         public override void Escape()

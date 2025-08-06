@@ -14,8 +14,20 @@ namespace BossAmiya
                 text
             });
         }
+        public override void OnSuppressed()
+        {
+            AngelaConversationUI.instance.AddAngelaMessage(LocalizeTextDataModel.instance.GetText("BossAmiya_Suppressed"));
+            AwardConfig.beatAmiya = true;
+            AwardConfigReader.SetConfigValue("beatAmiya", true);
+            RemoveBlockedEvent();
+            amiyaPhase = 1;
+        }
         public void OnNotice(string notice, params object[] param)
         {
+            if (AwardConfig.beatAmiya && !AwardConfig.allowAmiyaSubCounter)
+            {
+                return;
+            }
             if (this.model.qliphothCounter <= 0)
             {
                 return;
@@ -70,11 +82,26 @@ namespace BossAmiya
 
         public override void ActivateQliphothCounter()
         {
-            Escape();
+            if (AwardConfig.beatAmiya && !AwardConfig.allowAmiyaEscape)
+            {
+                ResetQliphothCounter();
+            }
+            else
+            {
+                Escape();
+            }
+        }
+        public override float TranformWorkProb(float originWorkProb)
+        {
+            if (AwardConfig.beatAmiya && AwardConfig.allowAmiyaUpSuccess)
+            {
+                return originWorkProb + 0.25f;
+            }
+            return base.TranformWorkProb(originWorkProb);
         }
         public override void OnEnterRoom(UseSkill skill)
         {
-            if (skill.skillTypeInfo.rwbpType == RwbpType.P)
+            if (skill.skillTypeInfo.rwbpType == RwbpType.P && !(AwardConfig.beatAmiya && !AwardConfig.allowAmiyaEscape))
             {
                 skill.agent.Die();
                 this.Escape();
@@ -110,6 +137,8 @@ namespace BossAmiya
                     isSignOfContinuation = false;
                     WillShock = 30f;
                     WillShockDamage = 6;
+                    fuckTimer = 0f;
+                    fuckALLTimer = 0f;
                     if (!HardModeManager.Instance.isHardMode())
                     {
                         isEmergency = false;
@@ -162,7 +191,10 @@ namespace BossAmiya
         }
         public override void ParamInit()
         {
+            amiyaPhase = 1;
             deadCnt = 0;
+            fuckALLTimer = 0f;
+            fuckTimer = 0f;
             animscript.Default();
             if (!this.observingDanger)
             {
@@ -233,13 +265,90 @@ namespace BossAmiya
                 }
                 else if (amiyaPhase == 2)
                 {
-                    if (!(this.model.GetCurrentCommand() is MoveCreatureCommand) && !isSummoning && !isWillShocking)
-                    {
-                        this.MakeMovement();
-                    }
+                    CheckFuckAgent();
                 }
             }
             catch (Exception ex)
+            {
+                Harmony_Patch.logger.Error(ex);
+            }
+        }
+        // 不命名了
+        public float fuckTimer = 0f;
+        public float fuckALLTimer = 0f;
+        public int fuckValue = 5;
+        public BlueStarAttackEffect atkEffect;
+        public void CheckFuckAgent()
+        {
+            fuckALLTimer += Time.deltaTime;
+            fuckTimer += Time.deltaTime;
+            if (fuckALLTimer >= 600f)
+            {
+                Harmony_Patch.logger.Info("Fuck ALL Agent");
+                IList<AgentModel> agentModels = AgentManager.instance.GetAgentList();
+                foreach (AgentModel agentModel in agentModels)
+                {
+                    if (!agentModel.IsDead())
+                    {
+                        agentModel.Die();
+                    }
+                }
+                this.model.hp = 0;
+            }
+            if (!HardModeManager.Instance.isHardMode() && fuckTimer >= 15f)
+            {
+                Harmony_Patch.logger.Info("Fuck Agent");
+                 FuckALLAgent();
+                 fuckTimer = 0f;
+            }
+            else if (fuckTimer >= 7.5f && HardModeManager.Instance.isHardMode())
+            {
+                Harmony_Patch.logger.Info("Fuck Agent");
+                FuckALLAgent();
+                fuckTimer = 0f;
+            }
+        }
+        public void InitFUCKEffect()
+        {
+            try
+            {
+                GameObject gameObject = Prefab.LoadPrefab("Effect/Creature/BlueStar/BlueStarEffect");
+                BlueStarAttackEffect component = gameObject.GetComponent<BlueStarAttackEffect>();
+                this.atkEffect = component;
+                gameObject.transform.SetParent(this.animscript.transform);
+                gameObject.transform.localPosition = Vector3.zero;
+                gameObject.transform.localScale = Vector3.one;
+                gameObject.transform.localRotation = Quaternion.identity;
+                gameObject.SetActive(false);
+                Harmony_Patch.logger.Info("Init FUCK Effect");
+            }
+            catch(Exception ex)
+            {
+                Harmony_Patch.logger.Error(ex);
+            }
+        }
+        public void FuckALLAgent()
+        {
+            try
+            {
+                if (atkEffect == null)
+                {
+                    InitFUCKEffect();
+                }
+                this.animscript.AttackInPhase2();
+                IList<AgentModel> agentModels = AgentManager.instance.GetAgentList();
+                this.atkEffect.gameObject.SetActive(true);
+                this.atkEffect.Reset();
+                foreach (AgentModel agentModel in agentModels)
+                {
+                    if (!agentModel.IsDead())
+                    {
+                        agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, fuckValue));
+                    }
+                }
+                fuckValue += 5;
+            }
+            catch(Exception ex)
             {
                 Harmony_Patch.logger.Error(ex);
             }
@@ -299,44 +408,51 @@ namespace BossAmiya
         }
         private void CheckTheSignOfContinuation()
         {
-            if (TheSignOfContinuation <= 0f && !isSignOfContinuation)
+            try
             {
-                this.model.commandQueue.Clear();
-                this.movable.StopMoving();
-                int deadCount = 0;
-                var luckCreatureList = new List<ChildCreatureModel>();
-                foreach (ChildCreatureModel unit in childs)
+                if (TheSignOfContinuation <= 0f && !isSignOfContinuation)
                 {
-                    if (unit.hp > 0f)
+                    this.model.commandQueue.Clear();
+                    this.movable.StopMoving();
+                    int deadCount = 0;
+                    var luckCreatureList = new List<ChildCreatureModel>();
+                    foreach (ChildCreatureModel unit in childs)
                     {
-                        luckCreatureList.Add(unit);
-                        deadCount++;
-                    }
-                }
-                if (deadCount > 0)
-                {
-                    var agentList = AgentManager.instance.GetAgentList();
-                    var AliveAgentList = new List<AgentModel>();
-                    foreach (AgentModel agent in agentList)
-                    {
-                        if (!agent.IsDead())
+                        if (unit.hp > 0f)
                         {
-                            AliveAgentList.Add(agent);
+                            luckCreatureList.Add(unit);
+                            deadCount++;
                         }
                     }
-                    var luckyAgentList = Extension.GetRandomElements<AgentModel>(AliveAgentList, deadCount * 2);
-                    isSignOfContinuation = true;
-                    animscript.IntoPhase2(luckCreatureList, luckyAgentList);
+                    if (deadCount > 0)
+                    {
+                        var agentList = AgentManager.instance.GetAgentList();
+                        var AliveAgentList = new List<AgentModel>();
+                        foreach (AgentModel agent in agentList)
+                        {
+                            if (!agent.IsDead())
+                            {
+                                AliveAgentList.Add(agent);
+                            }
+                        }
+                        var luckyAgentList = Extension.GetRandomElements<AgentModel>(AliveAgentList, deadCount * 2);
+                        isSignOfContinuation = true;
+                        animscript.IntoPhase2(luckCreatureList, luckyAgentList);
+                    }
+                    else
+                    {
+                        isSignOfContinuation = true;
+                        animscript.IntoPhase2();
+                    }
                 }
                 else
                 {
-                    isSignOfContinuation = true;
-                    animscript.IntoPhase2();
+                    TheSignOfContinuation -= Time.deltaTime;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                TheSignOfContinuation -= Time.deltaTime;
+                Harmony_Patch.logger.Error(ex);
             }
         }
         private void CheckKaltsitSummon()
@@ -565,6 +681,45 @@ namespace BossAmiya
             }
             return result;
         }
+        public void AddBlockedEvent()
+        {
+            BossAmiyaPlaySpeedBlockUI bossAmiyaPlaySpeedBlockUI = new();
+            GameStatusUI.PlaySpeedSettingBlockedUI playSpeedSettingBlockedUI = null;
+            Dictionary<PlaySpeedSettingBlockType, GameStatusUI.PlaySpeedSettingBlockedUI> blockedDictionary = Extension.GetPrivateField<Dictionary<PlaySpeedSettingBlockType, GameStatusUI.PlaySpeedSettingBlockedUI>>(PlaySpeedSettingUI.instance, "blockedDictionary");
+            if (blockedDictionary.TryGetValue(amiyaBlockType, out playSpeedSettingBlockedUI))
+            {
+                if (playSpeedSettingBlockedUI != null)
+                {
+                    UnityEngine.Object.Destroy(playSpeedSettingBlockedUI.gameObject);
+                }
+                blockedDictionary.Remove(amiyaBlockType);
+            }
+            blockedDictionary.Add(amiyaBlockType, bossAmiyaPlaySpeedBlockUI);
+            bossAmiyaPlaySpeedBlockUI.transform.SetParent(PlaySpeedSettingUI.instance.transform);
+            bossAmiyaPlaySpeedBlockUI.transform.localScale = Vector3.one;
+            bossAmiyaPlaySpeedBlockUI.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            bossAmiyaPlaySpeedBlockUI.transform.localPosition = Vector3.zero;
+            RectTransform component = bossAmiyaPlaySpeedBlockUI.GetComponent<RectTransform>();
+            if (component != null)
+            {
+                component.anchoredPosition = Vector3.zero;
+            }
+            bossAmiyaPlaySpeedBlockUI.gameObject.SetActive(false);
+        }
+        public void RemoveBlockedEvent()
+        {
+            Dictionary<PlaySpeedSettingBlockType, GameStatusUI.PlaySpeedSettingBlockedUI> blockedDictionary = Extension.GetPrivateField<Dictionary<PlaySpeedSettingBlockType, GameStatusUI.PlaySpeedSettingBlockedUI>>(PlaySpeedSettingUI.instance, "blockedDictionary");
+            GameStatusUI.PlaySpeedSettingBlockedUI playSpeedSettingBlockedUI = null;
+            if (blockedDictionary.TryGetValue(amiyaBlockType, out playSpeedSettingBlockedUI))
+            {
+                if (playSpeedSettingBlockedUI != null)
+                {
+                    UnityEngine.Object.Destroy(playSpeedSettingBlockedUI.gameObject);
+                }
+                blockedDictionary.Remove(amiyaBlockType);
+            }
+        }
+        public const PlaySpeedSettingBlockType amiyaBlockType = (PlaySpeedSettingBlockType)104;
         public BossAmiyaAnim animscript;
         public static int amiyaPhase = 0;
         public List<ChildCreatureModel> childs = [];

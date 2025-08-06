@@ -13,7 +13,7 @@ namespace BossAmiya
 {
     public class Harmony_Patch
     {
-        public static readonly string VERSION = "1.0.0";
+        public static readonly string VERSION = "1.0.1";
         public static YKMTLog logger;
         public static string path = Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path));
 
@@ -23,19 +23,20 @@ namespace BossAmiya
         public Harmony_Patch()
         {
             logger = new YKMTLog(path + "/Logs", false);
-            int errorNum = 0;
             HarmonyInstance harmony = HarmonyInstance.Create("BossAmiya.zxp");
             logger.Info("—————————————————NEW GAME———————————————————");
             try
             {
                 // 初始化凋亡UI
                 ElementUI.Instance.InitAB();
+                // 读取配置
+                AwardConfigReader.ReadConfig();
                 HPPatcher.PatchAll(harmony, typeof(Harmony_Patch));
-                HPPatcher.PatchAll(harmony, typeof(EquipmentPatch));
+                HPPatcher.PatchAll(harmony, typeof(AwardPatch));
             }
             catch (Exception ex)
             {
-                logger.Error($"When patch, the error occurred. Error number: {errorNum}");
+                logger.Error($"When patch, the error occurred.");
                 logger.Error(ex);
             }
             logger.Info($"Story started. BossAmiya v{VERSION} is loaded.");
@@ -177,13 +178,25 @@ namespace BossAmiya
         {
             try
             {
+                if (cmd == "")
+                {
+                    return true;
+                }
                 string[] array = cmd.Split(new char[]
                 {
                     ' '
                 });
                 string type1 = array[0].ToLower();
-                string type2 = array[1].ToLower().Trim();
-                string type3 = array[2].ToLower().Trim();
+                string type2 = "";
+                string type3 = "";
+                if (array.Length >= 2)
+                {
+                    type2 = array[1].ToLower().Trim();
+                }
+                if (array.Length >= 3)
+                {
+                    type3 = array[2].ToLower().Trim();
+                }
                 int value = 0;
                 if (array.Length >= 4)
                 {
@@ -221,13 +234,24 @@ namespace BossAmiya
                             if (HardModeManager.Instance.isHardMode())
                             {
                                 HardModeManager.Instance.setIsHardMode(false);
+                                __result = "";
+                                return false;
                             }
                             else
                             {
                                 HardModeManager.Instance.setIsHardMode(true);
+                                __result = "";
+                                return false;
                             }
                         }
                     }
+                }
+
+                if ((cmd == "creature cryofbanshee" || cmd == "rimi creature cryofbanshee") && BossAmiya.amiyaPhase == 2)
+                {
+                    SefiraConversationController.Instance.UpdateConversation(Sprites.AmiyaSprite, Sprites.Amiya_Color, LocalizeTextDataModel.instance.GetText("BlockTT10_Amiya"));
+                    __result = "";
+                    return false;
                 }
             }
             catch (Exception ex)
@@ -282,16 +306,26 @@ namespace BossAmiya
             if (target is CreatureModel && (target as CreatureModel).script is Reid)
             {
                 Reid reid = (target as CreatureModel).script as Reid;
-                if (reid.rushBuff == null) return;
                 if (!HardModeManager.Instance.isHardMode())
                 {
-                    target.AddUnitBuf(new Reid_weak(reid.rushBuff.moveScale / 5f * 1.5f, reid.rushBuff.moveScale / 5f * 30f));
+                    target.AddUnitBuf(new Reid_weak(reid.speed / 5f * 1.5f, reid.speed / 5f * 30f));
                 }
                 else
                 {
-                    target.AddUnitBuf(new Reid_weak(reid.rushBuff.moveScale / 7.5f * 4f, reid.rushBuff.moveScale / 5f * 60f));
+                    target.AddUnitBuf(new Reid_weak(reid.speed / 7.5f * 4f, reid.speed / 5f * 60f));
                 }
-                reid.rushBuff.moveScale = 0f;
+                reid.speed = 0f;
+            }
+        }
+        [HPHelper(typeof(GameManager), "UpdateGameSpeed")]
+        [HPPostfix]
+        public static void GameManager_UpdateGameSpeed()
+        {
+            if (BossAmiya.amiyaPhase == 2 && Time.timeScale > 2f)
+            {
+                SefiraConversationController.Instance.UpdateConversation(Sprites.AmiyaSprite, Sprites.Amiya_Color, LocalizeTextDataModel.instance.GetText("BlockTT10_Amiya"));
+                Time.timeScale = 1f;
+                Time.fixedDeltaTime = 0.02f;
             }
         }
     }

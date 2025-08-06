@@ -1,6 +1,7 @@
 ﻿using Spine;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using UnityEngine;
 using static BossAmiya.ReidAnim;
 
@@ -58,6 +59,8 @@ namespace BossAmiya
         {
             try
             {
+                this.model.GetMovableNode().ProcessMoveNode(this.model.metaInfo.speed * this.model.movementScale * this.model.GetMovementScaleByBuf());
+                this.model.movementScale = 1f + speed;
                 if (this.model.state == CreatureState.ESCAPE && !this.isInited)
                 {
                     Init();
@@ -111,10 +114,31 @@ namespace BossAmiya
                             animscript.StartRushing();
                             rushingPrepareTime = 0.5f;
                             isPreparedRushing = false;
+                            rushTime = 0f;
                         }
                     }
                     else
                     {
+                        rushTime += Time.deltaTime;
+                        _tempTimer += Time.deltaTime;
+                        if (!HardModeManager.Instance.isHardMode() && _tempTimer >= 0.1f)
+                        {
+                            speed += 0.018f;
+                            if (speed > 5f)
+                            {
+                                speed = 5f;
+                            }
+                            _tempTimer = 0f;
+                        }
+                        else if (_tempTimer >= 0.1f)
+                        {
+                            speed += 0.03f;
+                            if (speed > 7.5f)
+                            {
+                                speed = 7.5f;
+                            }
+                            _tempTimer = 0f;
+                        }
                         if (rushingPrepareTime > 0f && !isPreparedRushing)
                         {
                             rushingPrepareTime -= Time.deltaTime;
@@ -122,9 +146,6 @@ namespace BossAmiya
                         else if (rushingPrepareTime <= 0f && !isPreparedRushing)
                         {
                             Harmony_Patch.logger.Info("Rushing");
-                            rushBuff = new Reid_Rush();
-                            this.model.AddUnitBuf(rushBuff);
-                            Harmony_Patch.logger.Info("RushBuff Added");
                             tempAgentMovable = this.rushTarget.GetMovableNode();
                             this.movable.MoveToMovableNode(tempAgentMovable, false);
                             this.animscript.RushingMoving();
@@ -137,13 +158,17 @@ namespace BossAmiya
                             rushingPrepareTime = 0.5f;
                             rushingTime = 300f;
                             this.animscript.Default();
-                            this.rushTarget.TakeDamage(this.model, new DamageInfo(RwbpType.R, (int)(60 * this.rushBuff.moveScale), (int)(60 * this.rushBuff.moveScale)));
+                            this.rushTarget.TakeDamage(this.model, new DamageInfo(RwbpType.R, (int)(60 * this.speed), (int)(60 * this.speed)));
                             DamageParticleEffect.Invoker(this.rushTarget, RwbpType.R, this.model);
                             if (!rushTarget.IsDead())
                             {
-                                this.rushTarget.AddUnitBuf(new Reid_Slow(this.rushBuff.moveScale * 2));
+                                this.rushTarget.AddUnitBuf(new Reid_Slow(this.speed * 2));
                             }
-                            Extension.RemoveBuff(this.model, typeof(Reid_Rush));
+                            if (rushTime <= 15f)
+                            {
+                                this.model.AddUnitBuf(new Reid_RushUpgrade());
+                            }
+                            speed = 0f;
                         }
                         if (isPreparedRushing && (tempAgentMovable == null || !this.movable.IsMoving()))
                         {
@@ -158,6 +183,7 @@ namespace BossAmiya
                 Harmony_Patch.logger.Error(ex);
             }
         }
+        public float _tempTimer = 0f;
         public override bool OnAfterSuppressed()
         {
             try
@@ -242,7 +268,6 @@ namespace BossAmiya
         public ReidPhase phase;
         public ReidAnim animscript;
         public BossAmiya master;
-        public Reid_Rush rushBuff;
         private bool isInited;
         public bool isChangingPhase;
         public bool isRushing;
@@ -251,6 +276,9 @@ namespace BossAmiya
         private float rushingPrepareTime;
         private bool isPreparedRushing;
         private MovableObjectNode tempAgentMovable;
+
+        public float speed = 0f;
+        public float rushTime = 0f;
     }
     public enum ReidPhase
     {

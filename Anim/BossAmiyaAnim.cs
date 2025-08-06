@@ -2,9 +2,6 @@
 using Spine.Unity;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BossAmiya
 {
@@ -61,17 +58,32 @@ namespace BossAmiya
                     TrackEntry te3 = this.animator.AnimationState.SetAnimation(0, "Revive_End", false);
                     te3.Complete += delegate
                     {
-                        foreach (ChildCreatureModel creature in creatureList)
+                        try
                         {
-                            creature.Suppressed();
+                            foreach (ChildCreatureModel creature in creatureList)
+                            {
+                                creature.Suppressed();
+                            }
+                            foreach (AgentModel agent in agentList)
+                            {
+                                agent.Die();
+                            }
+                            BossAmiya.amiyaPhase = 2;
+                            script.isSignOfContinuation = false;
+                            MapNode centerNode = SefiraManager.instance.GetSefira(SefiraEnum.YESOD).sefiraPassage.centerNode;
+                            script.model.GetMovableNode().SetCurrentNode(centerNode);
+                            script.model.GetMovableNode().StopMoving();
+                            this.Default();
+                            PlaySpeedSettingUI.instance.SetNormalSpeedForcely();
+                            PlaySpeedSettingUI.instance.UpdateButton();
+                            script.AddBlockedEvent();
+                            script.InitFUCKEffect();
+                            Harmony_Patch.logger.Info("IntoPhase2");
                         }
-                        foreach (AgentModel agent in agentList)
+                        catch (Exception e)
                         {
-                            agent.Die();
+                            Harmony_Patch.logger.Error(e);
                         }
-                        BossAmiya.amiyaPhase = 2;
-                        script.isSignOfContinuation = false;
-                        this.Default();
                     };
                 };
             };
@@ -87,9 +99,24 @@ namespace BossAmiya
                     TrackEntry te3 = this.animator.AnimationState.SetAnimation(0, "Revive_End", false);
                     te3.Complete += delegate
                     {
-                        BossAmiya.amiyaPhase = 2;
-                        script.isSignOfContinuation = false;
-                        this.Default();
+                        try
+                        {
+                            BossAmiya.amiyaPhase = 2;
+                            script.isSignOfContinuation = false;
+                            MapNode centerNode = SefiraManager.instance.GetSefira(SefiraEnum.YESOD).sefiraPassage.centerNode;
+                            script.model.GetMovableNode().SetCurrentNode(centerNode);
+                            script.model.GetMovableNode().StopMoving();
+                            this.Default();
+                            PlaySpeedSettingUI.instance.SetNormalSpeedForcely();
+                            PlaySpeedSettingUI.instance.UpdateButton();
+                            script.AddBlockedEvent();
+                            script.InitFUCKEffect();
+                            Harmony_Patch.logger.Info("IntoPhase2");
+                        }
+                        catch (Exception e)
+                        {
+                            Harmony_Patch.logger.Error(e);
+                        }
                     };
                 };
             };
@@ -110,6 +137,34 @@ namespace BossAmiya
                 {
                     this.Default();
                     BossAmiya.isWillShocking = false;
+                };
+            };
+        }
+        public void AttackInPhase2()
+        {
+            TrackEntry te = this.animator.AnimationState.SetAnimation(0, "B_Attack", false);
+            te.Complete += delegate
+            {
+                this.Default();
+            };
+        }
+        public void FuckALLLLLLL()
+        {
+            this.animator.AnimationState.SetAnimation(0, "B_Skill_1", false);
+        }
+        public override bool HasDeadMotion()
+        {
+            return true;
+        }
+        public override void PlayDeadMotion()
+        {
+            TrackEntry te1 = this.animator.AnimationState.SetAnimation(0, "B_Die", false);
+            te1.Complete += delegate
+            {
+                TrackEntry te2 = this.animator.AnimationState.SetAnimation(0, "C_Start", false);
+                te2.Complete += delegate
+                {
+                    this.animator.AnimationState.SetAnimation(0, "C_Die", false);
                 };
             };
         }
