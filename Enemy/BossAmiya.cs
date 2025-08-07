@@ -139,6 +139,11 @@ namespace BossAmiya
                     WillShockDamage = 6;
                     fuckTimer = 0f;
                     fuckALLTimer = 0f;
+                    SefiraConversationController.Instance.UpdateConversation(Sprites.AmiyaSprite, Sprites.Amiya_Color, LocalizeTextDataModel.instance.GetText("BossAmiya_Desc"));
+                    BgmManager.instance.FadeOut();
+                    fullBGMplayer = PlayBGM("bgm-full.wav");
+                    amiyaPhase = 1;
+                    model.Escape();
                     if (!HardModeManager.Instance.isHardMode())
                     {
                         isEmergency = false;
@@ -149,12 +154,9 @@ namespace BossAmiya
                         isEmergency = true;
                         RandomEventLayer.currentLayer.AddTypo(RandomEventLayer.currentLayer.MakeDefaultTypoSession("ISW-DF-Emergency", LocalizeTextDataModel.instance.GetText("AmiyaEscape_Title_Relic"), LocalizeTextDataModel.instance.GetText("AmiyaEscape_Desc_Relic"), Sprites.Escape_Relic_Color, ""));
                         EnterEmergencyState();
+                        this.model.baseMaxHp = 20000;
+                        this.model.hp = 20000;
                     }
-                    SefiraConversationController.Instance.UpdateConversation(Sprites.AmiyaSprite, Sprites.Amiya_Color, LocalizeTextDataModel.instance.GetText("BossAmiya_Desc"));
-                    BgmManager.instance.FadeOut();
-                    fullBGMplayer = PlayBGM("bgm-full.wav");
-                    amiyaPhase = 1;
-                    model.Escape();
                 }
                 catch (Exception ex)
                 {
@@ -297,13 +299,11 @@ namespace BossAmiya
             }
             if (!HardModeManager.Instance.isHardMode() && fuckTimer >= 15f)
             {
-                Harmony_Patch.logger.Info("Fuck Agent");
                  FuckALLAgent();
                  fuckTimer = 0f;
             }
-            else if (fuckTimer >= 7.5f && HardModeManager.Instance.isHardMode())
+            else if (fuckTimer >= 10f && HardModeManager.Instance.isHardMode())
             {
-                Harmony_Patch.logger.Info("Fuck Agent");
                 FuckALLAgent();
                 fuckTimer = 0f;
             }
@@ -339,14 +339,32 @@ namespace BossAmiya
                 IList<AgentModel> agentModels = AgentManager.instance.GetAgentList();
                 this.atkEffect.gameObject.SetActive(true);
                 this.atkEffect.Reset();
-                foreach (AgentModel agentModel in agentModels)
+                if (!HardModeManager.Instance.isHardMode())
                 {
-                    if (!agentModel.IsDead())
+                    foreach (AgentModel agentModel in agentModels)
                     {
-                        agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, fuckValue));
+                        if (!agentModel.IsDead())
+                        {
+                            agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, fuckValue));
+                        }
+                    }
+                    fuckValue += 5;
+                    if (fuckValue > 50)
+                    {
+                        fuckValue = 50;
                     }
                 }
-                fuckValue += 5;
+                else
+                {
+                    foreach (AgentModel agentModel in agentModels)
+                    {
+                        if (!agentModel.IsDead())
+                        {
+                            agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, (int)(agentModel.maxHp * 0.01 * fuckValue)));
+                        }
+                    }
+                    fuckValue += 2;
+                }
             }
             catch(Exception ex)
             {
@@ -517,28 +535,35 @@ namespace BossAmiya
         }
         private void SummonChildCreatureByAmiya(string script, string anim)
         {
-            isSummoning = true;
-            SummonedCreature.Add(script);
-            this.model.commandQueue.Clear();
-            TrackEntry te1 = this.animscript.animator.AnimationState.SetAnimation(0, "A_Skill_Begin", false);
-            te1.Complete += delegate
+            try
             {
-                TrackEntry te2 = this.animscript.animator.AnimationState.SetAnimation(0, "A_Skill_Loop", false);
-                te2.Complete += delegate
+                isSummoning = true;
+                SummonedCreature.Add(script);
+                this.model.commandQueue.Clear();
+                TrackEntry te1 = this.animscript.animator.AnimationState.SetAnimation(0, "A_Skill_Begin", false);
+                te1.Complete += delegate
                 {
-                    TrackEntry te3 = this.animscript.animator.AnimationState.SetAnimation(0, "A_Skill_End", false);
-                    te3.Complete += delegate
+                    TrackEntry te2 = this.animscript.animator.AnimationState.SetAnimation(0, "A_Skill_Loop", false);
+                    te2.Complete += delegate
                     {
-                        this.animscript.Default();
-                        if (script == "Lamalian")
+                        TrackEntry te3 = this.animscript.animator.AnimationState.SetAnimation(0, "A_Skill_End", false);
+                        te3.Complete += delegate
                         {
-                            this.MakeChildCreature(this.movable, "Reid", "Custom/ReidAnim");
-                        }
-                        this.MakeChildCreature(this.movable, script, anim);
-                        BossAmiya.isSummoning = false;
+                            this.animscript.Default();
+                            if (script == "Lamalian")
+                            {
+                                this.MakeChildCreature(this.movable, "Reid", "Custom/ReidAnim");
+                            }
+                            this.MakeChildCreature(this.movable, script, anim);
+                            BossAmiya.isSummoning = false;
+                        };
                     };
                 };
-            };
+            }
+            catch (Exception ex)
+            {
+                Harmony_Patch.logger.Error(ex);
+            }
         }
         public override bool IsAttackTargetable()
         {
@@ -603,40 +628,80 @@ namespace BossAmiya
                 }
                 else if (ID == "LCP")
                 {
-                    childCreatureModel.baseMaxHp = 2000;
-                    childCreatureModel.hp = 2000;
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        childCreatureModel.baseMaxHp = 2000;
+                        childCreatureModel.hp = 2000;
+                    }
+                    else
+                    {
+                        childCreatureModel.baseMaxHp = 5000;
+                        childCreatureModel.hp = 5000;
+                    }
                     childCreatureModel.SetSpeed(0.5f);
                     childCreatureModel.SetDefenseId("LCP");
                     childCreatureModel.RiskLevel = RiskLevel.ALEPH;
                 }
                 else if (ID == "Goria")
                 {
-                    childCreatureModel.baseMaxHp = 1200;
-                    childCreatureModel.hp = 1200;
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        childCreatureModel.baseMaxHp = 1200;
+                        childCreatureModel.hp = 1200;
+                    }
+                    else
+                    {
+                        childCreatureModel.baseMaxHp = 2000;
+                        childCreatureModel.hp = 2000;
+                    }
                     childCreatureModel.SetSpeed(0.7f);
                     childCreatureModel.SetDefenseId("Goria");
                     childCreatureModel.RiskLevel = RiskLevel.WAW;
                 }
                 else if (ID == "KL")
                 {
-                    childCreatureModel.baseMaxHp = 1500;
-                    childCreatureModel.hp = 1500;
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        childCreatureModel.baseMaxHp = 1500;
+                        childCreatureModel.hp = 1500;
+                    }
+                    else
+                    {
+                        childCreatureModel.baseMaxHp = 4000;
+                        childCreatureModel.hp = 4000;
+                    }
                     childCreatureModel.SetSpeed(1.6f);
                     childCreatureModel.SetDefenseId("KL");
                     childCreatureModel.RiskLevel = RiskLevel.ALEPH;
                 }
                 else if (ID == "Lamalian")
                 {
-                    childCreatureModel.baseMaxHp = 800;
-                    childCreatureModel.hp = 800;
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        childCreatureModel.baseMaxHp = 800;
+                        childCreatureModel.hp = 800;
+                    }
+                    else
+                    {
+                        childCreatureModel.baseMaxHp = 1800;
+                        childCreatureModel.hp = 800;
+                    }
                     childCreatureModel.SetSpeed(1.6f);
                     childCreatureModel.SetDefenseId("Lamalian");
                     childCreatureModel.RiskLevel = RiskLevel.WAW;
                 }
                 else if (ID == "Reid")
                 {
-                    childCreatureModel.baseMaxHp = 1800;
-                    childCreatureModel.hp = 1800;
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        childCreatureModel.baseMaxHp = 1800;
+                        childCreatureModel.hp = 1800;
+                    }
+                    else
+                    {
+                        childCreatureModel.baseMaxHp = 8000;
+                        childCreatureModel.hp = 8000;
+                    }
                     childCreatureModel.SetSpeed(2.3f);
                     childCreatureModel.SetDefenseId("Reid");
                     childCreatureModel.RiskLevel = RiskLevel.ALEPH;

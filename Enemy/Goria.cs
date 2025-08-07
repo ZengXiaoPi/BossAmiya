@@ -100,7 +100,7 @@ namespace BossAmiya
             if (unit is CreatureModel)
             {
                 CreatureModel creatureModel = unit as CreatureModel;
-                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && !(creatureModel.script is BossAmiya) && !(creatureModel.script is Kaltsit) && !(creatureModel.script is LCP) && !(creatureModel.script is Mon2tr);
+                result = unit.hp > 0f && unit.IsAttackTargetable() && unit != this.model && Extension.CheckIsHostileCreature(creatureModel);
             }
             else
             {
@@ -254,6 +254,10 @@ namespace BossAmiya
             {
                 if (e.Data.Name == "OnAttack" && Extension.IsInRange(this.actor, this.target, 5f))
                 {
+                    if (target.hp < 0)
+                    {
+                        script.attackMP = 3;
+                    }
                     if (this.target is WorkerModel)
                     {
                         var target_asworker = target as WorkerModel;
@@ -261,7 +265,8 @@ namespace BossAmiya
                     }
                     else
                     {
-                        target.hp = 0;
+                        target.TakeDamage(this.actor, new DamageInfo(RwbpType.R, 75, 75));
+                        DamageParticleEffect.Invoker(this.target, RwbpType.R, this.actor);
                     }
                 }
             }

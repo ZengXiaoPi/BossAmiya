@@ -50,6 +50,10 @@ namespace BossAmiya
                         {
                             script.LCPPhase = 2;
                             script.isChangingPhase = false;
+                            if (HardModeManager.Instance.isHardMode())
+                            {
+                                script.model.hp = script.model.maxHp;
+                            }
                             this.Default();
                         };
                     };

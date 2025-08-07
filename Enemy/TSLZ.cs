@@ -192,7 +192,7 @@ namespace BossAmiya
             try
             {
                 MovableObjectNode movableNode = actor.GetMovableNode();
-                if (Extension.IsInRange(actor, target, 2f))
+                if (HasNearWorker())
                 {
                     movableNode.StopMoving();
                     AgentModel asAgent = target as AgentModel;
@@ -214,6 +214,17 @@ namespace BossAmiya
             {
                 Harmony_Patch.logger.Error(ex);
             }
+        }
+        private bool HasNearWorker()
+        {
+            foreach (UnitModel model in script.GetNearEnemy())
+            {
+                if (Extension.IsInRange(actor, model, 2f))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
         public UnitModel target;
         public CreatureModel model;

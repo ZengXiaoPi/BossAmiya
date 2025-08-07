@@ -9,20 +9,32 @@ namespace BossAmiya
 {
     public class Reid_Fire :UnitBuf
     {
+        public Reid_Fire(UnitModel actor)
+        {
+            this.actor = actor;
+        }
         public override void Init(UnitModel model)
         {
             base.Init(model);
-            this.remainTime = 5f;
+            if (!HardModeManager.Instance.isHardMode())
+            {
+                this.remainTime = 5f;
+            }
+            else
+            {
+                this.remainTime = 20f;
+            }
         }
         public override void FixedUpdate()
         {
             _timer += Time.deltaTime;
-            if (_timer >= 0.4f)
+            if (_timer >= 0.6f)
             {
                 _timer = 0f;
                 if (!HardModeManager.Instance.isHardMode())
                 {
-                    this.model.hp -= 1;
+                    this.model.TakeDamage(new DamageInfo(RwbpType.R, 3, 3));
+                    DamageParticleEffect.Invoker(this.model, RwbpType.R, actor);
                 }
                 else
                 {
@@ -34,6 +46,7 @@ namespace BossAmiya
                 }
             }
         }
+        private UnitModel actor;
         private float _timer;
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace BossAmiya
@@ -167,6 +168,25 @@ namespace BossAmiya
                 result.Add(copy[i]);
             }
             return result;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int MessageBoxW(
+            IntPtr hWnd,          // 父窗口句柄，0 表示没有父窗口
+            string lpText,       // 消息正文
+            string lpCaption,    // 窗口标题
+            uint uType);         // 按钮/图标等样式标志
+        /// <summary>
+        /// 调用 Windows API 弹出消息框
+        /// </summary>
+        /// <param name="text">要显示的文字</param>
+        /// <param name="caption">标题栏文字</param>
+        /// <param name="type">按钮/图标组合（参见 MSDN MessageBox 常量）</param>
+        /// <returns>用户点击的按钮对应的返回值（IDOK、IDCANCEL、IDYES、IDNO …）</returns>
+        public static int ShowMessageBox(string text, string caption = "提示", uint type = 0)
+        {
+            // hWnd 设为 0，表示框没有父窗口（独立弹出）
+            return MessageBoxW(IntPtr.Zero, text, caption, type);
         }
     }
 }

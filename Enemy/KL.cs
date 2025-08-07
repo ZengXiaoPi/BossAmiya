@@ -25,7 +25,7 @@ namespace BossAmiya
             {
                 cwjTimer += Time.deltaTime;
             }
-            if (cssTimer < 70f)
+            if (cssTimer < 50f)
             {
                 cssTimer += Time.deltaTime;
             }
@@ -73,7 +73,7 @@ namespace BossAmiya
         private void CheckSummon()
         {
             if (isSummoning == true) return;
-            if (cssTimer < 70f) return;
+            if (cssTimer < 50f) return;
             if (TSLZList.Count >= 5) return;
             Harmony_Patch.logger.Info("Summon TSLZ.");
             isSummoning = true;
@@ -92,6 +92,7 @@ namespace BossAmiya
                         this.MakeChildCreature(this.movable, "TSLZ", "Custom/TSLZAnim");
                     }
                     this.MakeChildCreature(this.movable, "TSLZ", "Custom/TSLZAnim");
+                    SefiraConversationController.Instance.UpdateConversation(Sprites.TSLZSprite, Sprites.TSLZ_Color, LocalizeTextDataModel.instance.GetText("TSLZ_Desc"));
                     TrackEntry te3 = this.animscript.animator.AnimationState.SetAnimation(0, "B_Revive_End", false);
                     te3.Complete += delegate
                     {
@@ -128,7 +129,6 @@ namespace BossAmiya
                 TSLZ tslz = childCreatureModel.script as TSLZ;
                 tslz.KLInstance = this;
                 TSLZList.Add(childCreatureModel);
-                SefiraConversationController.Instance.UpdateConversation(Sprites.TSLZSprite, Sprites.TSLZ_Color, LocalizeTextDataModel.instance.GetText("TSLZ_Desc"));
             }
             catch (Exception ex)
             {
@@ -139,7 +139,7 @@ namespace BossAmiya
         private void Init()
         {
             cwjTimer = 0f;
-            cssTimer = 10f;
+            cssTimer = 40f;
             isSummoning = false;
             SefiraConversationController.Instance.UpdateConversation(Sprites.KLSprite, Sprites.KL_Color, LocalizeTextDataModel.instance.GetText("KL_Desc"));
             isInited = true;
@@ -311,14 +311,14 @@ namespace BossAmiya
                 {
                     if (!HardModeManager.Instance.isHardMode())
                     {
-                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.W, 4, 12));
+                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.W, 8, 20));
                         DamageParticleEffect.Invoker(this.target, RwbpType.W, this.actor);
                     }
                     else
                     {
                         Harmony_Patch.RealDamage_TempList.Add(this.target);
-                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 4, 8));
-                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.W, 6, 16));
+                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 6, 10));
+                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.W, 12, 30));
                         DamageParticleEffect.Invoker(this.target, RwbpType.W, this.actor);
                     }
                 }
@@ -357,8 +357,15 @@ namespace BossAmiya
                     else if (_tempDamageCount == 5)
                     {
                         Harmony_Patch.RealDamage_TempList.Add(this.target);
-                        this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 25, 25));
-                        DamageParticleEffect.Invoker(this.target, RwbpType.N, this.actor);
+                        if (!HardModeManager.Instance.isHardMode())
+                        {
+                            this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 40, 40));
+                        }
+                        else
+                        {
+                            this.target.TakeDamage(this.actor, new DamageInfo(RwbpType.N, 120, 120));
+                        }
+                            DamageParticleEffect.Invoker(this.target, RwbpType.N, this.actor);
                         script.cwjTimer = 0f;
                     }
                     _tempDamageCount++;

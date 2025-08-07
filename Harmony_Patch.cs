@@ -13,7 +13,7 @@ namespace BossAmiya
 {
     public class Harmony_Patch
     {
-        public static readonly string VERSION = "1.0.1";
+        public static readonly string VERSION = "1.1.0";
         public static YKMTLog logger;
         public static string path = Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path));
 
@@ -233,12 +233,14 @@ namespace BossAmiya
                         {
                             if (HardModeManager.Instance.isHardMode())
                             {
+                                Extension.ShowMessageBox("当前模式为：普通模式。");
                                 HardModeManager.Instance.setIsHardMode(false);
                                 __result = "";
                                 return false;
                             }
                             else
                             {
+                                Extension.ShowMessageBox("当前模式为：困难模式。");
                                 HardModeManager.Instance.setIsHardMode(true);
                                 __result = "";
                                 return false;

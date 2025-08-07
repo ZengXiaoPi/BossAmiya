@@ -89,7 +89,10 @@ namespace BossAmiya
                         this.animscript.OutOfChangingPhase();
                         rushingTime = 0f;
                     }
-                    this.model.hp += 2;
+                    else
+                    {
+                        this.model.hp += 2;
+                    }
                 }
                 if (phase == ReidPhase.Phase2)
                 {
@@ -370,7 +373,7 @@ namespace BossAmiya
                         DamageParticleEffect.Invoker(this.target, RwbpType.R, this.actor);
                         if (target.GetUnitBufByName("Reid_Fire") == null)
                         {
-                            this.target.AddUnitBuf(new Reid_Fire());
+                            this.target.AddUnitBuf(new Reid_Fire(this.model));
                         }
                     }
                     else
@@ -379,7 +382,7 @@ namespace BossAmiya
                         DamageParticleEffect.Invoker(this.target, RwbpType.R, this.actor);
                         if (target.GetUnitBufByName("Reid_Fire") == null)
                         {
-                            this.target.AddUnitBuf(new Reid_Fire());
+                            this.target.AddUnitBuf(new Reid_Fire(this.model));
                         }
                     }
                 }

@@ -200,7 +200,7 @@ namespace BossAmiya
                     Finish();
                     return;
                 }
-                else if (script.GreatAttackMP < 4 && (script.LCPPhase != 2 || script.SweepingCeremonyMP < 9) && !script.isAttacking)
+                else if (script.GreatAttackMP < 4 && (script.LCPPhase != 2 || (script.LCPPhase == 2 && ((script.SweepingCeremonyMP < 9 && !HardModeManager.Instance.isHardMode()) || (script.SweepingCeremonyMP < 4 && HardModeManager.Instance.isHardMode())))) && !script.isAttacking)
                 {
                     PassageObjectModel passage = targets[0].GetMovableNode().GetPassage();
                     if (!targets[0].IsAttackTargetable() || !this.actor.IsHostile(targets[0]))
@@ -216,11 +216,11 @@ namespace BossAmiya
                         this.MoveToNormalAttack();
                     }
                 }
-                else if (script.LCPPhase == 2 && !script.isAttacking && ((script.SweepingCeremonyMP >= 9 && !HardModeManager.Instance.isHardMode()) || (script.SweepingCeremonyMP >= 7 && HardModeManager.Instance.isHardMode())))
+                else if (script.LCPPhase == 2 && !script.isAttacking && ((script.SweepingCeremonyMP >= 9 && !HardModeManager.Instance.isHardMode()) || (script.SweepingCeremonyMP >= 3 && HardModeManager.Instance.isHardMode())))
                 {
                     this.CeremonyAttack();
                 }
-                else if (script.GreatAttackMP >= 4 && !script.isAttacking)
+                else if (script.GreatAttackMP >= 3 && !script.isAttacking)
                 {
                     PassageObjectModel passage = targets[0].GetMovableNode().GetPassage();
                     if (!targets[0].IsAttackTargetable() || !this.actor.IsHostile(targets[0]))
@@ -402,13 +402,10 @@ namespace BossAmiya
                 {
                     if (SweepingShotCount < 120 && targets.Count > 0)
                     {
-                        var target = targets[UnityEngine.Random.Range(0, targets.Count)];
+                        List<UnitModel> targets_temp = script.GetNearEnemy();
+                        var target = targets_temp[UnityEngine.Random.Range(0, targets_temp.Count)];
                         PassageObjectModel passage = target.GetMovableNode().GetPassage();
-                        if (!target.IsAttackTargetable() || !this.actor.IsHostile(target) || passage == null || passage != this.actor.GetMovableNode().GetPassage() || target.hp <= 0f)
-                        {
-                            this.targets.Remove(target);
-                        }
-                        else
+                        if (target.IsAttackTargetable() && this.actor.IsHostile(target) && passage != null && passage == this.actor.GetMovableNode().GetPassage() && target.hp > 0f)
                         {
                             MovableObjectNode movableNode = target.GetMovableNode();
                             if (!HardModeManager.Instance.isHardMode())

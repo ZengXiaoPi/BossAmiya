@@ -1,4 +1,5 @@
-﻿using Spine;
+﻿using GlobalBullet;
+using Spine;
 using Spine.Unity;
 using System;
 using System.Collections.Generic;
@@ -70,13 +71,22 @@ namespace BossAmiya
                             }
                             BossAmiya.amiyaPhase = 2;
                             script.isSignOfContinuation = false;
-                            MapNode centerNode = SefiraManager.instance.GetSefira(SefiraEnum.YESOD).sefiraPassage.centerNode;
+                            MapNode centerNode;
+                            if (PlayerModel.instance.GetDay() >= 6)
+                            {
+                                centerNode = SefiraManager.instance.GetSefira(SefiraEnum.YESOD).sefiraPassage.centerNode;
+                            }
+                            else
+                            {
+                                centerNode = SefiraManager.instance.GetSefira(SefiraEnum.MALKUT).sefiraPassage.centerNode;
+                            }
                             script.model.GetMovableNode().SetCurrentNode(centerNode);
                             script.model.GetMovableNode().StopMoving();
                             this.Default();
                             PlaySpeedSettingUI.instance.SetNormalSpeedForcely();
                             PlaySpeedSettingUI.instance.UpdateButton();
                             script.AddBlockedEvent();
+                            GlobalBulletManager.instance.Reload();
                             script.InitFUCKEffect();
                             Harmony_Patch.logger.Info("IntoPhase2");
                         }
@@ -103,13 +113,22 @@ namespace BossAmiya
                         {
                             BossAmiya.amiyaPhase = 2;
                             script.isSignOfContinuation = false;
-                            MapNode centerNode = SefiraManager.instance.GetSefira(SefiraEnum.YESOD).sefiraPassage.centerNode;
-                            script.model.GetMovableNode().SetCurrentNode(centerNode);
+                            MapNode centerNode;
+                            if (PlayerModel.instance.GetDay() >= 6)
+                            {
+                                centerNode = SefiraManager.instance.GetSefira(SefiraEnum.YESOD).sefiraPassage.centerNode;
+                            }
+                            else
+                            {
+                                centerNode = SefiraManager.instance.GetSefira(SefiraEnum.MALKUT).sefiraPassage.centerNode;
+                            }
+                                script.model.GetMovableNode().SetCurrentNode(centerNode);
                             script.model.GetMovableNode().StopMoving();
                             this.Default();
                             PlaySpeedSettingUI.instance.SetNormalSpeedForcely();
                             PlaySpeedSettingUI.instance.UpdateButton();
                             script.AddBlockedEvent();
+                            GlobalBulletManager.instance.Reload();
                             script.InitFUCKEffect();
                             Harmony_Patch.logger.Info("IntoPhase2");
                         }
