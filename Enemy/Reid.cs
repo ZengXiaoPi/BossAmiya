@@ -16,6 +16,10 @@ namespace BossAmiya
                 return this.model as ChildCreatureModel;
             }
         }
+        public override void OnSuppressed()
+        {
+            Reid.phase = ReidPhase.Suppressed;
+        }
         public bool IsHostile(MovableObjectNode mov)
         {
             UnitModel unit = mov.GetUnit();
@@ -55,6 +59,10 @@ namespace BossAmiya
             this.animscript.Move();
             this.model.MoveToNode(MapGraph.instance.GetCreatureRoamingPoint());
         }
+        public override bool CanTakeDamage(UnitModel attacker, DamageInfo dmg)
+        {
+            return !isChangingPhase;
+        }
         public override void UniqueEscape()
         {
             try
@@ -85,7 +93,7 @@ namespace BossAmiya
                     {
                         this.model.hp = this.model.maxHp;
                         this.isChangingPhase = false;
-                        this.phase = ReidPhase.Phase2;
+                        Reid.phase = ReidPhase.Phase2;
                         this.animscript.OutOfChangingPhase();
                         rushingTime = 0f;
                     }
@@ -208,6 +216,7 @@ namespace BossAmiya
             isChangingPhase = false;
             isRushing = false;
             rushingTime = 300f;
+            Reid.phase = ReidPhase.Phase1;
             this.model.AddUnitBuf(new Reid_UpgradeBuff(this));
             if (HardModeManager.Instance.isHardMode())
             {
@@ -268,7 +277,7 @@ namespace BossAmiya
             this.model = model;
             this.SetParentAbnormality(((ChildCreatureModel)model).parent.script as BossAmiya);
         }
-        public ReidPhase phase;
+        public static ReidPhase phase;
         public ReidAnim animscript;
         public BossAmiya master;
         private bool isInited;
@@ -286,7 +295,8 @@ namespace BossAmiya
     public enum ReidPhase
     {
         Phase1,
-        Phase2
+        Phase2,
+        Suppressed
     }
     public class ReidAttackCommand : CreatureCommand
     {

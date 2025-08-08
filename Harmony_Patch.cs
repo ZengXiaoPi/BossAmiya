@@ -13,7 +13,7 @@ namespace BossAmiya
 {
     public class Harmony_Patch
     {
-        public static readonly string VERSION = "1.1.0";
+        public static readonly string VERSION = "1.2.2";
         public static YKMTLog logger;
         public static string path = Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path));
 
@@ -329,6 +329,36 @@ namespace BossAmiya
                 Time.timeScale = 1f;
                 Time.fixedDeltaTime = 0.02f;
             }
+        }
+        [HPHelper(typeof(ChildCreatureModel), "Suppressed")]
+        [HPPrefix]
+        public static bool CreatureModel_Suppressed(ref ChildCreatureModel __instance)
+        {
+            if (__instance.script is Reid)
+            {
+                if (Reid.phase == ReidPhase.Phase2 || Reid.phase == ReidPhase.Suppressed)
+                {
+                    return true;
+                }
+                else
+                {
+                    Reid script = (Reid)__instance.script;
+                    if (script.isChangingPhase && Reid.phase == ReidPhase.Phase1)
+                    {
+                        __instance.hp = 1f;
+                        return false;
+                    }
+                    else
+                    {
+                        __instance.hp = 1f;
+                        script.isChangingPhase = true;
+                        __instance.commandQueue.Clear();
+                        script.animscript.IntoChangingPhase();
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
     }
 }

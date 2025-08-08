@@ -32,23 +32,24 @@ namespace BossAmiya
                     multiDamage = 4f;
                 }
             }
-            if (script.phase == ReidPhase.Phase2 && model.hp / model.maxHp < 0.5f)
+            if (Reid.phase == ReidPhase.Phase2 && model.hp / model.maxHp < 0.5f)
             {
                 multiDamage += 1f;
             }
             return multiDamage;
         }
+        /*
         public override float OnTakeDamage(UnitModel attacker, DamageInfo damageInfo)
         {
-            if (script.phase == ReidPhase.Phase2)
+            if (Reid.phase == ReidPhase.Phase2)
             {
                 return base.OnTakeDamage(attacker, damageInfo);
             }
-            if (script.isChangingPhase && script.phase == ReidPhase.Phase1)
+            if (script.isChangingPhase && Reid.phase == ReidPhase.Phase1)
             {
                 return 0f;
             }
-            if (model.hp <= damageInfo.min && script.phase == ReidPhase.Phase1)
+            if (model.hp <= damageInfo.min && Reid.phase == ReidPhase.Phase1)
             {
                 model.hp = 1f;
                 script.isChangingPhase = true;
@@ -58,6 +59,7 @@ namespace BossAmiya
             }
             return base.OnTakeDamage(attacker, damageInfo);
         }
+        */
         private Reid script;
     }
 }

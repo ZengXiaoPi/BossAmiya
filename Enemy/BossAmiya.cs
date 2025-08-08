@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static BossAmiya.BossAmiyaAnim;
 
 namespace BossAmiya
 {
@@ -141,7 +142,10 @@ namespace BossAmiya
                     fuckALLTimer = 0f;
                     SefiraConversationController.Instance.UpdateConversation(Sprites.AmiyaSprite, Sprites.Amiya_Color, LocalizeTextDataModel.instance.GetText("BossAmiya_Desc"));
                     BgmManager.instance.FadeOut();
-                    fullBGMplayer = PlayBGM("bgm-full.wav");
+                    if (AwardConfig.playBGM)
+                    {
+                        fullBGMplayer = PlayBGM("bgm-full.wav");
+                    }
                     amiyaPhase = 1;
                     model.Escape();
                     if (!HardModeManager.Instance.isHardMode())
@@ -246,6 +250,7 @@ namespace BossAmiya
             {
                 if (amiyaPhase == 1)
                 {
+                    this.model.hp = this.model.maxHp;
                     CheckTheSignOfContinuation();
                     if (isSignOfContinuation) return;
                     if (!isWillShocking)
@@ -280,6 +285,46 @@ namespace BossAmiya
         public float fuckALLTimer = 0f;
         public int fuckValue = 5;
         public BlueStarAttackEffect atkEffect;
+        public void FuckDamage(TrackEntry trackEntry, Event e)
+        {
+            try
+            {
+                if (e.Data.Name == "OnAttack")
+                {
+                    IList<AgentModel> agentModels = AgentManager.instance.GetAgentList();
+                    if (!HardModeManager.Instance.isHardMode())
+                    {
+                        foreach (AgentModel agentModel in agentModels)
+                        {
+                            if (!agentModel.IsDead())
+                            {
+                                agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, fuckValue));
+                            }
+                        }
+                        fuckValue += 5;
+                        if (fuckValue > 50)
+                        {
+                            fuckValue = 50;
+                        }
+                    }
+                    else
+                    {
+                        foreach (AgentModel agentModel in agentModels)
+                        {
+                            if (!agentModel.IsDead())
+                            {
+                                agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, (int)(agentModel.maxHp * 0.01 * fuckValue)));
+                            }
+                        }
+                        fuckValue += 2;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Harmony_Patch.logger.Error(ex);
+            }
+        }
         public void CheckFuckAgent()
         {
             fuckALLTimer += Time.deltaTime;
@@ -335,36 +380,10 @@ namespace BossAmiya
                 {
                     InitFUCKEffect();
                 }
+                animscript.Event = new BossAmiyaEvent(FuckDamage);
                 this.animscript.AttackInPhase2();
-                IList<AgentModel> agentModels = AgentManager.instance.GetAgentList();
                 this.atkEffect.gameObject.SetActive(true);
                 this.atkEffect.Reset();
-                if (!HardModeManager.Instance.isHardMode())
-                {
-                    foreach (AgentModel agentModel in agentModels)
-                    {
-                        if (!agentModel.IsDead())
-                        {
-                            agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, fuckValue));
-                        }
-                    }
-                    fuckValue += 5;
-                    if (fuckValue > 50)
-                    {
-                        fuckValue = 50;
-                    }
-                }
-                else
-                {
-                    foreach (AgentModel agentModel in agentModels)
-                    {
-                        if (!agentModel.IsDead())
-                        {
-                            agentModel.TakeDamage(model, new DamageInfo(RwbpType.N, (int)(agentModel.maxHp * 0.01 * fuckValue)));
-                        }
-                    }
-                    fuckValue += 2;
-                }
             }
             catch(Exception ex)
             {
@@ -630,13 +649,13 @@ namespace BossAmiya
                 {
                     if (!HardModeManager.Instance.isHardMode())
                     {
-                        childCreatureModel.baseMaxHp = 2000;
-                        childCreatureModel.hp = 2000;
+                        childCreatureModel.baseMaxHp = 3000;
+                        childCreatureModel.hp = 3000;
                     }
                     else
                     {
-                        childCreatureModel.baseMaxHp = 5000;
-                        childCreatureModel.hp = 5000;
+                        childCreatureModel.baseMaxHp = 6000;
+                        childCreatureModel.hp = 6000;
                     }
                     childCreatureModel.SetSpeed(0.5f);
                     childCreatureModel.SetDefenseId("LCP");

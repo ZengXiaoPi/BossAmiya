@@ -86,7 +86,6 @@
     <Compile Include="Anim\ReidAnim.cs" />
     <Compile Include="Anim\TSLZAnim.cs" />
     <Compile Include="Award\AwardConfigReader.cs" />
-    <Compile Include="Award\AwardManager.cs" />
     <Compile Include="Award\AwardPatch.cs" />
     <Compile Include="Award\BulletSprite.cs" />
     <Compile Include="BossAmiyaPlaySpeedBlockUI.cs" />

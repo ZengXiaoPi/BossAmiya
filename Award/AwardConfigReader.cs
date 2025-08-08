@@ -49,6 +49,7 @@ namespace BossAmiya
             AwardConfig.allowAmiyaEscape = bool.Parse(xmlDoc.SelectSingleNode("/rewardConfig/allowAmiyaEscape/value").InnerText);
             AwardConfig.allowAmiyaSubCounter = bool.Parse(xmlDoc.SelectSingleNode("/rewardConfig/allowAmiyaSubCounter/value").InnerText);
             AwardConfig.allowAmiyaUpSuccess = bool.Parse(xmlDoc.SelectSingleNode("/rewardConfig/allowAmiyaUpSuccess/value").InnerText);
+            AwardConfig.playBGM = bool.Parse(xmlDoc.SelectSingleNode("/Config/playBGM/value").InnerText);
         }
         private static void SaveConfig()
         {
@@ -82,5 +83,6 @@ namespace BossAmiya
         public static bool allowAmiyaEscape;
         public static bool allowAmiyaSubCounter;
         public static bool allowAmiyaUpSuccess;
+        public static bool playBGM;
     }
 }
