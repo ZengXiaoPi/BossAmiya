@@ -132,9 +132,7 @@
     <Compile Include="UnitBuff\Reid\Reid_weak.cs" />
     <Compile Include="YKMTLog.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Enemy\CommandAmiya\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CopyFile" AfterTargets="build">
     <Message Text="正在自动拷贝模组文件。请在NewGameMode.csproj更改复制路径。" Importance="high" />

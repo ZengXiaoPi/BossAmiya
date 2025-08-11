@@ -18,8 +18,24 @@ namespace BossAmiya
                 return this.model as ChildCreatureModel;
             }
         }
+        private float _deadTimer = 0f;
+        private void CheckDead()
+        {
+            if (_deadTimer >= 3f)
+            {
+                if (this.model.hp == 0f)
+                {
+                    this.model.Suppressed();
+                }
+            }
+            else
+            {
+                _deadTimer += Time.deltaTime;
+            }
+        }
         public override void UniqueEscape()
         {
+            CheckDead();
             if (this.model.state == CreatureState.ESCAPE && !this.isInited)
             {
                 Init();

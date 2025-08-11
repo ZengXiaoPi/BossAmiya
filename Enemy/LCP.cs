@@ -32,8 +32,8 @@ namespace BossAmiya
             isInited = false;
             this.master.childs.Remove(this.Model);
             this.animscript.PlayDeadMotion();
-            this.master.summonGoriaTimer = 0f;
             this.master.CheckDeadCreature();
+            this.master.summonGoriaTimer = 0f;
             return true;
         }
         public override void Escape()

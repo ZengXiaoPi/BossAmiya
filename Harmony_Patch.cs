@@ -11,6 +11,11 @@ using UnityEngine;
 
 namespace BossAmiya
 {
+    public class Note_For_Developers
+    {
+        public const string AAA_NOTE_CN = "如果你在使用Dnspy，ILSpy等工具解包，大可不必，你可以直接在 https://github.com/ZengXiaoPi/BossAmiya 获取源代码。本模组使用MIT协议开源。";
+        public const string AAA_NOTE_EN = "If you are using Dnspy, ILSpy or other decompilers, you can directly download the source code from https://github.com/ZengXiaoPi/BossAmiya. This mod is licensed under the MIT license.";
+    }
     public class Harmony_Patch
     {
         public static readonly string VERSION = "1.2.2";
@@ -359,6 +364,15 @@ namespace BossAmiya
                 }
             }
             return true;
+        }
+        [HPHelper(typeof(GlobalBulletManager), "SetMaxBullet")]
+        [HPPostfix]
+        public static void GlobalBulletManager_SetMaxBullet(ref int max)
+        {
+            if (AwardConfig.beatAmiya && AwardConfig.useAmiyaBullet)
+            {
+                max = (int)MathEx.RoundUp(max * 1.5f, 0);
+            }
         }
     }
 }

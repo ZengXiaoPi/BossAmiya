@@ -41,6 +41,7 @@ namespace BossAmiya
             this.master.childs.Remove(this.Model);
             this.isInited = false;
             this.animscript.PlayDeadMotion();
+            this.master.CheckDeadCreature();
             if (this.kaltsit != null)
             {
                 if (this.kaltsit.model.hp <= 0f)
@@ -48,7 +49,6 @@ namespace BossAmiya
                     master.summonLCPTimer = 0f;
                 }
             }
-            this.master.CheckDeadCreature();
             return true;
         }
         public override void OnViewInit(CreatureUnit unit)

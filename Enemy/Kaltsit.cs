@@ -33,6 +33,7 @@ namespace BossAmiya
             this.master.childs.Remove(this.Model);
             this.isInited = false;
             this.animscript.PlayDeadMotion();
+            this.master.CheckDeadCreature();
             if (this.Mon2trModel != null)
             {
                 if (this.Mon2trModel.hp > 0f)
@@ -48,7 +49,6 @@ namespace BossAmiya
             {
                 master.summonLCPTimer = 0f;
             }
-                this.master.CheckDeadCreature();
             return true;
         }
         public override void Escape()

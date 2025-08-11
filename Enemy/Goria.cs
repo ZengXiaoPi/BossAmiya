@@ -42,8 +42,8 @@ namespace BossAmiya
             this.master.childs.Remove(this.Model);
             this.isInited = false;
             this.animscript.PlayDeadMotion();
-            this.master.summonKLTimer = 0f;
             this.master.CheckDeadCreature();
+            this.master.summonKLTimer = 0f;
             return true;
         }
         public override void OnViewInit(CreatureUnit unit)
