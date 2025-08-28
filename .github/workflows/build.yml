@@ -1,62 +1,45 @@
-name: Build .NET Class Library (Windows)
+name: Build .NET Framework Library
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest  # 使用 Windows 运行器
-    
-    strategy:
-      matrix:
-        dotnet-version: ['4.7.2'] 
-        
+    runs-on: windows-latest  # .NET Framework 只能在 Windows 上构建
+
     steps:
     # 检出代码
     - name: Checkout code
       uses: actions/checkout@v4
-    
-    # 设置 .NET 环境
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+
+    # 设置 MSBuild 路径（使用预装的 VS 2019）
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    # 恢复 NuGet 包
+    - name: Restore NuGet packages
+      run: nuget restore
+
+    # 构建解决方案/项目
+    - name: Build solution
+      run: msbuild /p:Configuration=Release /p:TargetFrameworkVersion=v4.7.2
+
+    # 收集构建产物
+    - name: Collect artifacts
+      run: |
+        mkdir artifacts
+        xcopy /s /y "**/bin/Release/*.dll" artifacts\
+        xcopy /s /y "**/bin/Release/*.pdb" artifacts\
+        xcopy /s /y "**/bin/Release/*.xml" artifacts\
+
+    # 上传构建产物
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
-    
-    # 缓存 NuGet 包
-    - name: Cache NuGet packages
-      uses: actions/cache@v3
-      with:
-        path: ~\.nuget\packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    
-    # 恢复依赖项
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    # 构建项目
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-    
-    # 运行测试（如果有测试项目）
-    - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal
-    
-    # 打包（生成 DLL 和 PDB 文件）
-    - name: Publish binaries
-      run: dotnet publish --no-build --configuration Release --output ./artifacts/bin
-    
-    # 上传构建产物到工件
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts-${{ matrix.dotnet-version }}
-        path: |
-          ./artifacts/bin/**
-          ./artifacts/nuget/**
+        name: amiya-artifacts
+        path: artifacts
         if-no-files-found: error
