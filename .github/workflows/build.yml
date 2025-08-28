@@ -1,0 +1,62 @@
+name: Build .NET Class Library (Windows)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build:
+    runs-on: windows-latest  # 使用 Windows 运行器
+    
+    strategy:
+      matrix:
+        dotnet-version: ['4.7.2'] 
+        
+    steps:
+    # 检出代码
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # 设置 .NET 环境
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    
+    # 缓存 NuGet 包
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~\.nuget\packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    # 恢复依赖项
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    # 构建项目
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    # 运行测试（如果有测试项目）
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+    
+    # 打包（生成 DLL 和 PDB 文件）
+    - name: Publish binaries
+      run: dotnet publish --no-build --configuration Release --output ./artifacts/bin
+    
+    # 上传构建产物到工件
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts-${{ matrix.dotnet-version }}
+        path: |
+          ./artifacts/bin/**
+          ./artifacts/nuget/**
+        if-no-files-found: error
