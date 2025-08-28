@@ -53,7 +53,7 @@ jobs:
     
     # 上传构建产物到工件
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-artifacts-${{ matrix.dotnet-version }}
         path: |
